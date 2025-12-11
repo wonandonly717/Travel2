@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅程規劃 - My Travel Pal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        /* 韓系簡約風字體 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8f8f8;
+        }
+        /* 模擬手機畫面的最大寬度 */
+        #app {
+            max-width: 420px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background-color: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+        /* 導航按鈕活動狀態 */
+        .nav-btn.active {
+            color: #d898a8; /* 柔和的玫瑰粉色 */
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <header class="p-4 flex justify-between items-center border-b border-gray-100 sticky top-0 bg-white z-10">
+        <h1 class="text-xl font-medium text-gray-800">{{ appTitle }}</h1>
+        <button @click="currentTab = 'Settings'" class="text-gray-500 hover:text-gray-700">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.942 3.313.824 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.942 1.543-.824 3.313-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.942-3.313-.824-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.942-1.543.824-3.313 2.37-2.37.996.608 2.296.22 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        </button>
+    </header>
+
+    <main class="p-4 pb-20">
+        <div v-if="currentTab === 'Schedule'">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">🗓️ 我的旅程</h2>
+            <p class="text-sm text-gray-500 mb-4">功能：行程規劃、天氣預報、地鐵/航班時間。</p>
+            
+            <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition duration-300">
+                <div class="flex items-center mb-2">
+                    <span class="text-sm font-medium text-blue-500 mr-2">🌤️ 晴朗</span>
+                    <span class="text-sm text-gray-400">18°C / 預計抵達時間：14:00</span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800">首爾塔 (N Seoul Tower)</h3>
+                <p class="text-gray-500 text-sm mt-1">地址：首爾特別市龍山區南山公園路 105</p>
+            </div>
+            </div>
+
+        <div v-else-if="currentTab === 'Map'">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">📍 附近探索</h2>
+            <p class="text-sm text-gray-500 mb-4">功能：地圖顯示、地點標記、路線規劃。</p>
+            <div class="bg-gray-200 h-64 rounded-xl flex items-center justify-center text-gray-500">
+                [地圖元件區] - 需串接地圖 API
+            </div>
+        </div>
+
+        <div v-else-if="currentTab === 'Accounting'">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">💰 記帳本</h2>
+            <p class="text-sm text-gray-500 mb-4">功能：收入/支出記錄、幣別選擇、分帳功能。</p>
+            
+            <div class="bg-white p-5 mb-6 rounded-xl shadow-lg border-t-4 border-rose-100">
+                <div class="grid grid-cols-2 gap-4 mb-3">
+                    <button class="py-2 rounded-lg" :class="[isIncome ? 'bg-green-100 text-green-700 font-medium' : 'bg-gray-100 text-gray-500']" @click="isIncome = true">收入</button>
+                    <button class="py-2 rounded-lg" :class="[!isIncome ? 'bg-red-100 text-red-700 font-medium' : 'bg-gray-100 text-gray-500']" @click="isIncome = false">支出</button>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">金額</label>
+                    <input type="number" placeholder="0.00" class="w-full p-3 border border-gray-200 rounded-lg focus:ring-rose-300 focus:border-rose-300 transition duration-150">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">方式</label>
+                        <select class="w-full p-3 border border-gray-200 rounded-lg bg-white">
+                            <option>現金</option>
+                            <option>信用卡</option>
+                            <option>行動支付</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">幣別</label>
+                        <select class="w-full p-3 border border-gray-200 rounded-lg bg-white">
+                            <option>TWD (新台幣)</option>
+                            <option>KRW (韓元)</option>
+                            <option>USD (美金)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">分帳給 (選填)</label>
+                    <input type="text" placeholder="例如: 小明, 小華 (各付一半)" class="w-full p-3 border border-gray-200 rounded-lg focus:ring-rose-300 focus:border-rose-300 transition duration-150">
+                </div>
+
+                <button class="w-full py-3 bg-rose-500 text-white font-medium rounded-lg hover:bg-rose-600 transition duration-200 shadow-md">
+                    新增紀錄
+                </button>
+            </div>
+            
+            <h3 class="text-xl font-medium mt-6 mb-3 text-gray-700">本日紀錄</h3>
+            <ul class="space-y-3">
+                <li class="p-3 bg-white rounded-xl flex justify-between items-center shadow-sm">
+                    <div>
+                        <p class="font-medium text-gray-800">午餐 (明洞豆腐鍋)</p>
+                        <p class="text-xs text-gray-400">信用卡 ・ 團員分帳</p>
+                    </div>
+                    <span class="text-red-600 font-bold">- ₩ 15,000</span>
+                </li>
+            </ul>
+        </div>
+
+        <div v-else-if="currentTab === 'List'">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">🛒 待辦與清單</h2>
+            
+            <h3 class="text-xl font-medium mt-6 mb-3 text-gray-700">🛍️ 購物清單</h3>
+            <p class="text-sm text-gray-500 mb-3">功能：可上傳圖片，買完可打勾。</p>
+            <div class="space-y-3">
+                <div class="bg-white p-3 rounded-xl flex items-center shadow-sm border border-gray-100">
+                    <input type="checkbox" class="form-checkbox h-5 w-5 text-rose-500 rounded-full border-gray-300 mr-3">
+                    <img src="https://via.placeholder.com/50x50/f0e6e7/d898a8?text=P" alt="商品圖片" class="w-12 h-12 object-cover rounded-lg mr-3 border border-gray-100">
+                    <span class="flex-grow text-gray-700">AHC神仙水 (5瓶)</span>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-medium mt-6 mb-3 text-gray-700">🧳 行李清單</h3>
+            <div class="space-y-3">
+                <div class="bg-white p-3 rounded-xl flex items-center shadow-sm border border-gray-100">
+                    <input type="checkbox" class="form-checkbox h-5 w-5 text-rose-500 rounded-full border-gray-300 mr-3" checked>
+                    <span class="flex-grow text-gray-500 line-through">護照、簽證、機票</span>
+                </div>
+                <div class="bg-white p-3 rounded-xl flex items-center shadow-sm border border-gray-100">
+                    <input type="checkbox" class="form-checkbox h-5 w-5 text-rose-500 rounded-full border-gray-300 mr-3">
+                    <span class="flex-grow text-gray-700">充電器、萬用轉接頭</span>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-medium mt-6 mb-3 text-gray-700">📝 待辦事項</h3>
+            <div class="space-y-3">
+                <div class="bg-white p-3 rounded-xl flex items-center shadow-sm border border-gray-100">
+                    <input type="checkbox" class="form-checkbox h-5 w-5 text-rose-500 rounded-full border-gray-300 mr-3">
+                    <span class="flex-grow text-gray-700">聯繫民宿確認入住時間</span>
+                </div>
+            </div>
+        </div>
+
+        <div v-else-if="currentTab === 'Settings'">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">⚙️ 設定與主題</h2>
+            <p class="text-sm text-gray-500 mb-4">功能：配色切換、其他應用程式設定。</p>
+
+            <div class="bg-white p-4 rounded-xl shadow-md border border-gray-100">
+                <h3 class="font-medium mb-3 text-gray-700">App 主題顏色</h3>
+                <div class="flex space-x-3">
+                    <button class="w-10 h-10 rounded-full bg-rose-300 border-2 border-white shadow-md"></button>
+                    <button class="w-10 h-10 rounded-full bg-blue-300 border-2 border-white shadow-md"></button>
+                    <button class="w-10 h-10 rounded-full bg-green-300 border-2 border-white shadow-md"></button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-xl max-w-sm mx-auto z-20">
+        <div class="flex justify-around items-center h-16">
+            <button @click="currentTab = 'Schedule'" class="nav-btn flex flex-col items-center p-2" :class="{ 'active': currentTab === 'Schedule' }">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-4 4h.01M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span class="text-xs mt-1">行程</span>
+            </button>
+            <button @click="currentTab = 'Map'" class="nav-btn flex flex-col items-center p-2" :class="{ 'active': currentTab === 'Map' }">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span class="text-xs mt-1">地圖</span>
+            </button>
+            <button @click="currentTab = 'Accounting'" class="nav-btn flex flex-col items-center p-2" :class="{ 'active': currentTab === 'Accounting' }">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 6v-1m0 1v3m0 0h.01M12 18V9.143a4.99 4.99 0 00-3-1.071M12 18L7.143 18m4.857-0L16.857 18"></path></svg>
+                <span class="text-xs mt-1">記帳</span>
+            </button>
+            <button @click="currentTab = 'List'" class="nav-btn flex flex-col items-center p-2" :class="{ 'active': currentTab === 'List' }">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <span class="text-xs mt-1">清單</span>
+            </button>
+        </div>
+    </nav>
+
+</div>
+
+<script>
+    const { createApp, ref } = Vue
+
+    createApp({
+        setup() {
+            const currentTab = ref('Schedule') 
+            const appTitle = ref('我的旅程')
+            const isIncome = ref(false) 
+
+            return {
+                currentTab,
+                appTitle,
+                isIncome,
+            }
+        }
+    }).mount('#app')
+</script>
+
+</body>
+</html>
