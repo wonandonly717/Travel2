@@ -22,16 +22,19 @@
             overflow-x: hidden;
             color: #1e293b;
             overscroll-behavior-y: none;
+            /* 💡 修正 1: 確保 body 上的變數是有效的 */
+            --custom-bg-color: #f0f4f8; /* 預設值 */
+            --custom-bg-image: none; /* 預設值 */
         }
         
-        /* 1. 最底層：背景圖片/顏色，現在將會動態切換 class */
+        /* 1. 最底層：背景圖片/顏色 */
         .app-bg {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             z-index: -2;
             pointer-events: none;
             transition: background-color 0.5s ease, background-image 0.5s ease; 
-            /* 💡 修正 2: 預設就套用自訂顏色變數，讓圖片/預設圖疊在上面 */
+            /* 💡 修正 2: 預設就套用自訂顏色變數 */
             background-color: var(--custom-bg-color); 
         }
         
@@ -47,9 +50,10 @@
             background-image: none !important; 
         } 
 
-        /* 自訂圖片樣式：套用顏色 + 自訂圖 */
+        /* 自訂圖片樣式：套用顏色 + 自訂圖 (圖片會疊在顏色上) */
         .app-bg.bg-custom-image {
-            background-image: var(--custom-bg-image);
+            /* 💡 修正 3: 直接使用變數，它已經包含 url() */
+            background-image: var(--custom-bg-image); 
             background-size: cover;
             background-position: center center;
         }
@@ -59,7 +63,8 @@
         .app-blur-layer {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(255, 255, 255, 0.25); 
+            /* 讓毛玻璃的底色有一點點自訂色的傾向 */
+            background-color: var(--custom-bg-color-alpha, rgba(255, 255, 255, 0.25)); 
             backdrop-filter: blur(4px); 
             z-index: -1;
             pointer-events: none;
@@ -89,13 +94,10 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 
-        /* Liquid Glass 效果 */
+        /* Liquid Glass 效果 - 讓它半透明，可以看到背景色/圖 */
         .liquid-glass {
-            background: linear-gradient(
-                135deg,
-                rgba(255, 255, 255, 0.75) 0%,
-                rgba(255, 255, 255, 0.55) 100%
-            );
+            /* 💡 修正 4: 使用 rgba() 讓它有點透明度，並以白色為基底 */
+            background: rgba(255, 255, 255, 0.75); 
             backdrop-filter: blur(24px) saturate(200%);
             -webkit-backdrop-filter: blur(24px) saturate(200%);
             border: 1px solid rgba(255, 255, 255, 0.8);
@@ -126,6 +128,7 @@
         }
 
         .card-bg {
+            /* 讓行程卡片也有一點透明度 */
             background: rgba(255, 255, 255, 0.75) !important;
             backdrop-filter: blur(16px) saturate(120%) !important;
             border: 1px solid rgba(255, 255, 255, 0.5) !important;
@@ -163,7 +166,10 @@
         }
     </style>
 </head>
-<body :style="{'--custom-bg-color': customBgColor, '--custom-bg-image': customBgImage ? 'url(' + customBgImage + ')' : 'none'}">
+<body :style="{
+    '--custom-bg-color': customBgColor, 
+    '--custom-bg-image': customBgImage ? 'url(\'' + customBgImage + '\')' : 'none'
+}">
 <div id="app">
     <div class="app-bg" :class="getAppBgClass()"></div> 
     <div class="app-blur-layer"></div>
@@ -546,6 +552,10 @@
                                 </div>
                                 <span class="text-[10px] font-bold mt-1 text-slate-700">自訂顏色</span>
                             </label>
+                            <button v-if="appBgColor !== 'custom_color'" @click="appBgColor = 'custom_color'; saveToLocalStorage()" 
+                                    class="text-[10px] font-bold mt-1 px-2 py-0.5 rounded-full transition bg-white text-slate-500 border border-slate-200">
+                                設為背景
+                            </button>
                         </div>
 
                         <div class="flex flex-col items-center justify-center">
@@ -562,7 +572,7 @@
                             <button v-if="customBgImage" @click="appBgColor = 'custom_image'; saveToLocalStorage()" 
                                     class="text-[10px] font-bold mt-1 px-2 py-0.5 rounded-full transition"
                                     :class="appBgColor === 'custom_image' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-200'">
-                                設為背景
+                                設為背景 (疊圖)
                             </button>
                         </div>
 
@@ -570,7 +580,7 @@
 
                     <p class="text-xs text-slate-500 font-bold bg-white/50 p-3 rounded-xl">
                         <i class="fas fa-palette mr-1 text-purple-400"></i>
-                        請選擇背景主題：預設圖片、自訂顏色或自訂圖片。自訂圖片將**疊在**自訂顏色上方。
+                        請選擇背景主題：預設圖片、自訂顏色或自訂圖片。選擇「自訂圖片」會將圖片**疊在**自訂顏色上方。
                     </p>
                 </div>
 
@@ -662,7 +672,7 @@
                 </div>
                 
                 <div class="text-center text-[10px] text-slate-400 font-bold mt-8">
-                    Travel Planner v1.6 (修復背景衝突與圖片預覽) <br>
+                    Travel Planner v1.7 (深度修正背景與顏色綁定) <br>
                 </div>
             </div>
 
@@ -820,15 +830,14 @@
             const baseCurrency = ref('TWD');
             const targetCurrency = ref('HKD');
             
-            // 修正背景邏輯
+            // 背景邏輯
             const appBgColor = ref('default'); // 'default', 'custom_color', 'custom_image'
             const customBgColor = ref('#f0f4f8'); 
             const customBgImage = ref(null); // 儲存 Base64 圖片字串
 
-            // 💡 修正 6: 根據 appBgColor 決定背景 class 的邏輯
+            // 💡 修正 9: 根據 appBgColor 決定背景 class 的邏輯
             const getAppBgClass = () => {
-                if (appBgColor.value === 'default') return 'bg-default';
-                if (appBgColor.value === 'custom_image' && customBgImage.value) return 'bg-custom-image';
+                if (appBgColor.value === 'custom_image') return 'bg-custom-image';
                 if (appBgColor.value === 'custom_color') return 'bg-custom-color';
                 return 'bg-default'; 
             };
@@ -1022,7 +1031,7 @@
                 }
             };
             
-            // 💡 修正 7: 處理背景圖片上傳的邏輯 (只上傳，不自動選中)
+            // 💡 修正 10: 處理背景圖片上傳的邏輯 (只上傳，不自動選中)
             const handleBgImageUpload = (event) => {
                 const file = event.target.files[0];
                 if (file) {
@@ -1033,13 +1042,11 @@
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         customBgImage.value = e.target.result;
-                        // 不自動切換 appBgColor, 讓使用者點擊「設為背景」按鈕
                         saveToLocalStorage();
                         alert('背景圖片上傳成功！請點擊下方的「設為背景」按鈕套用。');
                     };
                     reader.readAsDataURL(file);
                 }
-                // 清空 input 欄位，以便再次觸發 change 事件
                 event.target.value = '';
             };
 
@@ -1106,8 +1113,8 @@
             const toggleBought = (item) => { item.bought = !item.bought; saveToLocalStorage(); };
 
             const saveToLocalStorage = () => {
-                // 使用 v16 版本號
-                localStorage.setItem('trip_planner_v16', JSON.stringify({ 
+                // 使用 v17 版本號
+                localStorage.setItem('trip_planner_v17', JSON.stringify({ 
                     settings: { 
                         startDate: startDate.value, 
                         duration: tripDuration.value,
@@ -1126,7 +1133,7 @@
             
             // 處理版本兼容性
             const loadData = () => {
-                let data = JSON.parse(localStorage.getItem('trip_planner_v16'));
+                let data = JSON.parse(localStorage.getItem('trip_planner_v17'));
                 
                 if (data) {
                     if (data.settings) { 
@@ -1184,7 +1191,7 @@
 
             const exportData = () => {
                 const data = {
-                    version: '1.6',
+                    version: '1.7',
                     exportDate: new Date().toISOString(),
                     settings: { 
                         startDate: startDate.value, 
