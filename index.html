@@ -184,12 +184,12 @@
                 </p>
                 <template v-else>
                     <p class="text-lg font-bold mb-3 text-gray-800" :class="{'text-red-500': flightInfo.status.includes('延遲') || flightInfo.status.includes('取消')}">
-                        {{ flightInfo.number }} - <span class="text-primary">{{ flightInfo.status }}</span>
+                        {{ flightInfo.number.toUpperCase() }} - <span class="text-primary">{{ flightInfo.status }}</span>
                     </p>
 
                     <div class="flex items-center justify-between text-sm mb-5 relative">
                         <div class="text-center">
-                            <span class="block text-xl font-bold text-gray-800">{{ flightInfo.departureAirport }}</span>
+                            <span class="block text-xl font-bold text-gray-800">{{ flightInfo.departureAirport.toUpperCase() }}</span>
                             <span class="text-xs text-gray-500">出發</span>
                         </div>
 
@@ -198,28 +198,28 @@
                         </div>
 
                         <div class="text-center">
-                            <span class="block text-xl font-bold text-gray-800">{{ flightInfo.arrivalAirport }}</span>
+                            <span class="block text-xl font-bold text-gray-800">{{ flightInfo.arrivalAirport.toUpperCase() }}</span>
                             <span class="text-xs text-gray-500">抵達</span>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-4 text-sm font-light border-t pt-4 border-gray-100">
                         <div class="col-span-2">
-                            <p class="font-medium text-gray-500">起飛時間 (建議 Check-in)</p>
-                            <p class="mt-1 font-extrabold text-2xl text-primary">{{ flightInfo.departureTime }}</p>
-                            <p class="text-xs text-gray-400">登機門 {{ flightInfo.gate }}</p>
+                            <p class="font-medium text-gray-500">表訂起飛時間</p>
+                            <p class="mt-1 font-extrabold text-2xl text-primary">{{ formatTime(flightInfo.departureTime) }}</p>
+                            <p class="text-xs text-gray-400">登機門 {{ flightInfo.gate.toUpperCase() }}</p>
                         </div>
                         <div class="col-span-2 text-right"> 
                             <p class="font-medium text-gray-500">預計抵達時間</p>
-                            <p class="mt-1 font-extrabold text-2xl text-gray-800">{{ flightInfo.arrivalTime }}</p>
-                            <p class="text-xs text-gray-400">航廈 {{ flightInfo.terminal }}</p>
+                            <p class="mt-1 font-extrabold text-2xl text-gray-800">{{ formatTime(flightInfo.arrivalTime) }}</p>
+                            <p class="text-xs text-gray-400">航廈 {{ flightInfo.terminal.toUpperCase() }}</p>
                         </div>
                     </div>
 
                     <div class="flight-detail-divider"></div>
 
                     <div class="flex justify-between items-center text-sm text-gray-600">
-                        <p>登機時間：{{ flightInfo.checkInTime }}</p>
+                        <p>登機時間：{{ formatTime(flightInfo.checkInTime) }}</p>
                         <p class="font-medium">座位：<span class="font-bold text-primary">12A</span></p>
                     </div>
                 </template>
@@ -344,26 +344,6 @@
         <div v-else-if="currentTab === 'Settings'">
             <h2 class="text-2xl font-semibold mb-6 text-gray-700">⚙️ 設定與主題</h2>
             
-            <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
-                 <h3 class="font-medium mb-3 text-gray-700 flex items-center">🗓️ 旅行日期設定</h3>
-                 <div class="space-y-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">旅行起始日期</label>
-                        <input type="date" v-model="tripStartDate" 
-                               class="w-full p-2 border border-gray-200 rounded-lg focus:ring-primary focus:border-primary">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">總旅行天數</label>
-                        <input type="number" v-model.number="totalTripDays" min="1" max="30"
-                               class="w-full p-2 border border-gray-200 rounded-lg focus:ring-primary focus:border-primary"
-                               placeholder="例如：4">
-                    </div>
-                 </div>
-                 <p class="text-xs text-gray-500 mt-2">設定後，上方的日期選單將會自動更新。</p>
-            </div>
-            
-            <hr class="my-6 border-gray-200">
-            
              <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
                 <h3 class="font-medium mb-3 text-gray-700">本次旅行的主要貨幣 (旅遊地貨幣)</h3>
                 <select v-model="tripCurrency" @change="fetchExchangeRate" class="w-full p-2 border border-gray-200 rounded-lg bg-white text-gray-700 focus:ring-primary focus:border-primary">
@@ -400,28 +380,41 @@
                 <h3 class="font-medium mb-3 text-gray-700 flex items-center">✈️ 航班資訊設定</h3>
                 
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-600 mb-1">航班號碼 (例如：CI100)</label>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">航班號碼 (例如：CI100) <span class="text-xs text-red-500">（將強制轉為大寫）</span></label>
                     <input type="text" v-model="flightInfo.number" 
                            class="w-full p-2 border border-gray-200 rounded-lg focus:ring-primary focus:border-primary uppercase"
-                           placeholder="CI100">
+                           placeholder="CI100" @input="flightInfo.number = flightInfo.number.toUpperCase()">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">出發機場代碼 (例如：TPE)</label>
                         <input type="text" v-model="flightInfo.departureAirport" 
                                class="w-full p-2 border border-gray-200 rounded-lg focus:ring-primary focus:border-primary uppercase"
-                               placeholder="TPE" maxlength="3">
+                               placeholder="TPE" maxlength="3" @input="flightInfo.departureAirport = flightInfo.departureAirport.toUpperCase()">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">抵達機場代碼 (例如：NRT)</label>
                         <input type="text" v-model="flightInfo.arrivalAirport" 
                                class="w-full p-2 border border-gray-200 rounded-lg focus:ring-primary focus:border-primary uppercase"
-                               placeholder="NRT" maxlength="3">
+                               placeholder="NRT" maxlength="3" @input="flightInfo.arrivalAirport = flightInfo.arrivalAirport.toUpperCase()">
                     </div>
                 </div>
+                 <div class="grid grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">表訂起飛時間</label>
+                        <input type="time" v-model="flightInfo.departureTime" 
+                               class="w-full p-2 border border-gray-200 rounded-lg focus:ring-primary focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">表訂抵達時間</label>
+                        <input type="time" v-model="flightInfo.arrivalTime" 
+                               class="w-full p-2 border border-gray-200 rounded-lg focus:ring-primary focus:border-primary">
+                    </div>
+                </div>
+
                 <button class="w-full mt-4 py-2 text-white font-medium rounded-lg shadow-md transition duration-200 bg-primary"
                         :style="{ 'background-color': primaryColor }" @click="fetchFlightStatus(true)">
-                    更新航班細節 (出發/抵達時間)
+                    更新航班狀態 (模擬查詢)
                 </button>
             </div>
 
@@ -429,15 +422,17 @@
                  <h3 class="font-medium mb-3 text-gray-700 flex items-center">🌦️ 目的地天氣設定</h3>
                  <label class="block text-sm font-medium text-gray-600 mb-1">目的地城市名稱 (例如：Tokyo)</label>
                  <div class="flex">
-                    <input type="text" v-model="tripCityNameInput" 
+                    <input type="text" v-model="tripCityName" 
                            class="flex-1 p-2 border border-gray-200 rounded-l-lg focus:ring-primary focus:border-primary"
                            placeholder="例如：Tokyo, Japan">
                     <button class="px-4 py-2 text-white font-medium rounded-r-lg shadow-md transition duration-200 bg-primary"
-                        :style="{ 'background-color': primaryColor }" @click="updateWeatherLocation">
-                        設定
+                        :style="{ 'background-color': primaryColor }" @click="fetchWeather">
+                        更新天氣 (模擬)
                     </button>
                  </div>
-                 <p class="text-xs text-gray-500 mt-2">App 將嘗試定位並模擬此地的天氣。</p>
+                 <p class="text-xs text-red-500 mt-2">
+                    **注意：** 目前為瀏覽器環境，無法使用真實 GPS 或 API 查詢。此處僅用於模擬顯示該城市天氣。
+                 </p>
             </div>
 
             <hr class="my-6 border-gray-200">
@@ -567,6 +562,13 @@
                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
                            placeholder="1000">
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">圖片網址 (URL)</label>
+                    <input type="url" v-model="newShoppingItem.imgUrl"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                           placeholder="可選填：https://...">
+                    <p class="text-xs text-gray-400 mt-1">留空將使用預設圖片</p>
+                </div>
                  <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6 bg-primary"
                         :style="{ 'background-color': primaryColor }">
                     新增
@@ -627,6 +629,10 @@
                     <input type="number" v-model.number="editingItem.data.price" required
                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
                            placeholder="1000">
+                    <label class="block text-sm font-medium text-gray-600 mb-1 mt-3">圖片網址 (URL)</label>
+                    <input type="url" v-model="editingItem.data.imgUrl"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                           placeholder="可選填：https://...">
                 </div>
 
                 <div v-if="editingItem.type === 'Accounting'">
@@ -685,7 +691,7 @@
 </div>
 
 <script>
-    const { createApp, ref, computed, onMounted, watch } = Vue
+    const { createApp, ref, computed, onMounted } = Vue
 
     createApp({
         setup() {
@@ -693,27 +699,14 @@
             const appTitle = ref('TRAVEL') 
             const currentTab = ref('Schedule') 
             
-            // --- 旅遊日期設定 (新增監聽器) ---
-            // 預設值為今天的日期
-            const todayISO = new Date().toISOString().split('T')[0];
-            const tripStartDate = ref(todayISO); 
+            // --- 旅遊日期設定 ---
+            const tripStartDate = ref('2025-12-08'); 
             const totalTripDays = ref(4);
             const currentDay = ref(tripStartDate.value); 
-            
-            // 監聽 tripStartDate 和 totalTripDays 的變化，並自動更新 currentDay
-            watch([tripStartDate, totalTripDays], () => {
-                 // 當日期或天數改變時，嘗試將 currentDay 設定為新的 Day 1
-                if (totalTripDays.value > 0) {
-                    currentDay.value = days.value[1].date; // 選擇新的 Day 1
-                } else {
-                    currentDay.value = 'PreTrip';
-                }
-            });
-
 
             // --- 貨幣和匯率狀態 ---
-            const baseCurrency = ref('TWD') // 基礎結算幣別 (例如：新台幣)
-            const tripCurrency = ref('JPY') // 旅遊地主要貨幣
+            const baseCurrency = ref('TWD') 
+            const tripCurrency = ref('JPY') 
             
             // 模擬匯率數據
             const exchangeRates = ref({
@@ -722,9 +715,7 @@
             const exchangeRate = ref(0.21) 
 
             // --- 天氣狀態 ---
-            const tripCityName = ref('Destination'); 
-            const tripCityNameInput = ref(''); 
-
+            const tripCityName = ref('Tokyo, Japan'); // 預設值調整為較實際的城市名稱
             const weather = ref({
                 temp: null, 
                 description: '',
@@ -735,15 +726,15 @@
 
             // --- 航班資訊狀態 ---
             const flightInfo = ref({
-                number: '', 
-                status: '未設定', 
-                departureTime: 'N/A',
-                departureAirport: 'N/A',
-                arrivalTime: 'N/A',
-                arrivalAirport: 'N/A', 
-                checkInTime: 'N/A',
-                terminal: 'N/A',      
-                gate: 'N/A',
+                number: 'CI100', // 預設一個航班號碼
+                status: '未更新', 
+                departureTime: '08:00', // 表訂時間
+                departureAirport: 'TPE',
+                arrivalTime: '12:00', // 表訂時間
+                arrivalAirport: 'NRT', 
+                checkInTime: '06:00',
+                terminal: 'T2',      
+                gate: 'B10',
                 updating: false 
             });
             
@@ -759,12 +750,13 @@
             const showScheduleModal = ref(false) 
             const showEditModal = ref(false)
             const editingItem = ref({ type: '', typeLabel: '', data: null }); 
-            const newExpense = ref({ amount: null, name: '', type: 'cash', currency: tripCurrency.value, date: tripStartDate.value })
+            const newExpense = ref({ amount: null, name: '', type: 'cash', currency: tripCurrency.value, date: '2025-12-08' })
             const newTodo = ref({ name: '' })
-            const newShoppingItem = ref({ name: '', price: null })
+            // 購物清單新增圖片網址欄位
+            const newShoppingItem = ref({ name: '', price: null, imgUrl: '' }) 
             const newScheduleItem = ref({ time: '', name: '' })
 
-            // 範例數據 (日期將根據 tripStartDate 自動調整)
+            // 範例數據
             const expenses = ref([
                 { id: 101, name: '午餐：當地小吃', amount: 1500, currency: 'JPY', type: 'cash', date: '2025-12-08' },
                 { id: 102, name: '電車票', amount: 200, currency: 'JPY', type: 'cash', date: '2025-12-08' },
@@ -778,27 +770,25 @@
             ])
             
             const shoppingList = ref([
-                { id: 201, name: '當地特產伴手禮', price: 1500, imgUrl: 'https://via.placeholder.com/150/f9fafb/555555?text=Shopping', purchased: false },
+                // 預設圖片使用一個更貼近真實商品的 URL
+                { id: 201, name: '當地特產伴手禮', price: 1500, imgUrl: 'https://images.unsplash.com/photo-1542495679-052c00a4d533?w=100&h=100&fit=crop&q=80', purchased: false },
             ])
             
             const scheduleList = ref([
                 { id: 1, name: '前往機場 (TPE)', time: '06:00', date: '2025-12-08' },
-                { id: 2, name: '飛機抵達 NRT', time: '13:00', date: '2025-12-08' },
+                { id: 2, name: '飛機抵達 NRT', time: '12:00', date: '2025-12-08' },
                 { id: 3, name: '飯店 Check-in', time: '15:00', date: '2025-12-08' },
                 { id: 4, name: '晚餐：當地餐廳', time: '18:30', date: '2025-12-08' },
             ])
 
 
-            // --- Computed 屬性 (修正日期計算邏輯) ---
+            // --- Computed 屬性 (維持原樣) ---
             
             const days = computed(() => {
                 const dayList = [{ label: '行前', date: 'PreTrip', dayOfMonth: '' }]; 
                 const startDate = new Date(tripStartDate.value);
                 
-                // 確保總天數是有效的數字
-                const daysCount = Math.max(0, parseInt(totalTripDays.value) || 0);
-
-                for (let i = 0; i < daysCount; i++) {
+                for (let i = 0; i < totalTripDays.value; i++) {
                     const date = new Date(startDate);
                     date.setDate(startDate.getDate() + i);
                     
@@ -808,18 +798,9 @@
                     dayList.push({ label: `Day ${i + 1}`, date: isoDate, dayOfMonth: dayOfMonth });
                 }
                 
-                // 檢查 currentDay 是否仍有效，若無，則切換到行前或 Day 1
-                if (!dayList.find(d => d.date === currentDay.value)) {
-                     currentDay.value = daysCount > 0 ? dayList[1].date : 'PreTrip'; 
+                if (!dayList.find(d => d.date === currentDay.value) && totalTripDays.value > 0) {
+                     currentDay.value = dayList[1].date; 
                 }
-                
-                // 確保新加入的行程/記帳項目有預設日期
-                if (daysCount > 0) {
-                     newExpense.value.date = dayList[1].date;
-                } else {
-                     newExpense.value.date = 'PreTrip';
-                }
-
                 return dayList;
             })
             
@@ -832,9 +813,6 @@
             // 貨幣轉換邏輯
             const convertToBaseCurrency = (amount, currency) => {
                 if (currency === baseCurrency.value) { return amount; }
-                // 避免除以零
-                if (exchangeRates.value[baseCurrency.value] === 0) return 0;
-                
                 const rate = exchangeRates.value[currency] / exchangeRates.value[baseCurrency.value];
                 return amount * rate; 
             }
@@ -848,7 +826,6 @@
 
             const filteredExpenses = computed(() => {
                  return expenses.value.filter(e => {
-                    // 修正篩選邏輯，確保只有與 currentDay 相符的項目才會出現
                     const dateMatch = (currentDay.value === 'PreTrip' && e.date === 'PreTrip') || 
                                      (currentDay.value !== 'PreTrip' && e.date === currentDay.value);
                                      
@@ -864,10 +841,21 @@
             })
 
 
-            // --- Methods (維持原樣，但確保使用最新的日期設定) ---
+            // --- Methods ---
+
+            // 【新增】時間格式化，確保顯示為 HH:MM
+            const formatTime = (timeString) => {
+                if (!timeString) return 'N/A';
+                const parts = timeString.split(':');
+                if (parts.length < 2) return timeString;
+                return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+            }
 
             const fetchExchangeRate = async () => {
                 await new Promise(resolve => setTimeout(resolve, 300));
+
+                const base = baseCurrency.value;
+                const target = tripCurrency.value; 
 
                 const mockRatesToTWD = {
                     "TWD": 1, "USD": 31, "JPY": 0.21, "CNY": 4.5, "EUR": 34, "KRW": 0.025, "GBP": 38, "THB": 0.85, "HKD": 4.0 
@@ -875,29 +863,24 @@
 
                 exchangeRates.value = mockRatesToTWD;
 
-                if (baseCurrency.value === tripCurrency.value) {
+                if (base === target) {
                     exchangeRate.value = 1;
-                } else if (mockRatesToTWD[baseCurrency.value] !== 0) {
-                    exchangeRate.value = mockRatesToTWD[tripCurrency.value] / mockRatesToTWD[baseCurrency.value];
                 } else {
-                    exchangeRate.value = 0; // 避免除以零
+                    exchangeRate.value = mockRatesToTWD[target] / mockRatesToTWD[base];
                 }
                 
                 newExpense.value.currency = tripCurrency.value;
             }
             
-            const updateWeatherLocation = () => {
-                tripCityName.value = tripCityNameInput.value.trim() || 'Destination';
-                fetchWeather();
-            }
-
+            // 【修正】獲取天氣資訊 (現在它只依賴 tripCityName)
             const fetchWeather = async () => {
-                if (tripCityName.value === 'Destination' || tripCityName.value === '') {
+                if (tripCityName.value === '' || tripCityName.value === 'Destination') {
                     weather.value = { temp: null, description: '', icon: '', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
                     return; 
                 }
 
                 weather.value.loading = true;
+                // 模擬查詢延遲
                 await new Promise(resolve => setTimeout(resolve, 800)); 
                 
                 let temp = 20;
@@ -905,12 +888,14 @@
                 let icon = '☀️';
 
                 const cityLower = tripCityName.value.toLowerCase();
-                if (cityLower.includes('tokyo') || cityLower.includes('osaka')) {
+                if (cityLower.includes('tokyo') || cityLower.includes('osaka') || cityLower.includes('nrt')) {
                     temp = 12; icon = '☁️'; description = '多雲';
                 } else if (cityLower.includes('new york') || cityLower.includes('london')) {
                     temp = 5; icon = '🌧️'; description = '降雨，濕冷';
                 } else if (cityLower.includes('bangkok') || cityLower.includes('kuala')) {
                     temp = 32; icon = '🔥'; description = '炎熱，高溫';
+                } else if (cityLower.includes('taipei') || cityLower.includes('tpe')) {
+                    temp = 25; icon = '⛅'; description = '多雲時晴';
                 }
                  
                 weather.value = { 
@@ -922,50 +907,65 @@
                 };
             }
             
+            // 【修正】實時航班追蹤功能
             const fetchFlightStatus = async (isManualUpdate = false) => {
-                if (!flightInfo.value.number) {
+                if (!flightInfo.value.number || flightInfo.value.number === '') {
                     flightInfo.value.status = '未設定';
                     return;
                 }
                 
-                if (isManualUpdate) {
-                    // 如果用戶手動點擊「更新航班細節」，則重設為預設或抓取到的最新數據
-                    flightInfo.value = { 
-                        ...flightInfo.value,
-                        status: '追蹤中...', 
-                        departureTime: '09:05',
-                        arrivalTime: '13:00',
-                        checkInTime: '07:00',
-                        terminal: 'T2',      
-                        gate: 'B10',
-                        updating: true 
-                    };
-                } else {
-                    flightInfo.value.updating = true;
-                }
-
+                flightInfo.value.updating = true;
+                
+                // 模擬真實查詢延遲
                 await new Promise(resolve => setTimeout(resolve, 1500)); 
 
-                const currentStatus = ['準時', '延遲', '登機', '已抵達', '取消'];
-                const randomStatus = currentStatus[Math.floor(Math.random() * currentStatus.length)];
+                // 只有手動更新時才模擬狀態變化 (自動更新保持在 "準時" 或上次狀態)
+                let newStatus = flightInfo.value.status === '未更新' ? '準時' : flightInfo.value.status;
+                let newGate = flightInfo.value.gate;
+                let newTerminal = flightInfo.value.terminal;
+                let newArrivalTime = flightInfo.value.arrivalTime;
                 
-                let newStatus = randomStatus;
-                let newGate = 'B10';
-                let newTerminal = 'T2';
-                let newArrivalTime = '13:00';
-                
-                if (randomStatus === '延遲') {
-                     newStatus = '延遲 25 分鐘';
-                     newGate = 'C05';
-                     newTerminal = 'T1';
-                     newArrivalTime = '13:25';
-                } else if (randomStatus === '登機') {
-                     newStatus = '登機';
-                     newGate = 'B11';
-                } else if (randomStatus === '取消') {
-                     newStatus = '航班取消';
+                if (isManualUpdate) {
+                    const currentStatus = ['準時', '延遲', '登機', '已抵達', '取消'];
+                    const randomStatus = currentStatus[Math.floor(Math.random() * currentStatus.length)];
+                    
+                    newStatus = randomStatus;
+                    
+                    if (randomStatus === '延遲') {
+                         newStatus = '延遲 40 分鐘';
+                         newGate = 'C05';
+                         newTerminal = 'T1';
+                         // 模擬計算延遲後的時間
+                         const [hours, minutes] = flightInfo.value.arrivalTime.split(':').map(Number);
+                         const delayedMinutes = hours * 60 + minutes + 40;
+                         const finalHours = Math.floor(delayedMinutes / 60) % 24;
+                         const finalMinutes = delayedMinutes % 60;
+                         newArrivalTime = `${finalHours.toString().padStart(2, '0')}:${finalMinutes.toString().padStart(2, '0')}`;
+                         
+                    } else if (randomStatus === '登機') {
+                         newStatus = '登機';
+                         newGate = 'B11';
+                    } else if (randomStatus === '取消') {
+                         newStatus = '航班取消';
+                         newGate = 'N/A';
+                         newTerminal = 'N/A';
+                    } else if (randomStatus === '已抵達') {
+                        newStatus = '已抵達';
+                        newArrivalTime = flightInfo.value.arrivalTime; // 假設準時抵達
+                    } else {
+                        newStatus = '準時';
+                    }
+                    
+                    // 登機時間也應根據表訂起飛時間調整
+                    const [depHours, depMinutes] = flightInfo.value.departureTime.split(':').map(Number);
+                    const checkInMinutes = depHours * 60 + depMinutes - 120; // 提前 2 小時
+                    const checkInHours = Math.floor(checkInMinutes / 60) % 24;
+                    const checkInFinalMinutes = checkInMinutes % 60;
+                    flightInfo.value.checkInTime = `${checkInHours.toString().padStart(2, '0')}:${checkInFinalMinutes.toString().padStart(2, '0')}`;
                 }
 
+
+                // 更新航班資訊
                 flightInfo.value.status = newStatus;
                 flightInfo.value.gate = newGate;
                 flightInfo.value.terminal = newTerminal;
@@ -1003,6 +1003,7 @@
                 primaryColor.value = hex;
                 document.documentElement.style.setProperty('--primary-color', hex);
                 
+                // 簡易的背景色邏輯
                 const r = parseInt(hex.slice(1, 3), 16);
                 const g = parseInt(hex.slice(3, 5), 16);
                 const b = parseInt(hex.slice(5, 7), 16);
@@ -1030,17 +1031,20 @@
                 showTodoModal.value = false;
             }
 
+            // 【修正】新增購物清單項目
             const addShoppingItem = () => {
                 if (!newShoppingItem.value.name || !newShoppingItem.value.price) return;
+                const defaultImg = 'https://via.placeholder.com/150/f9fafb/555555?text=Shopping';
                 const item = {
                     id: Date.now(),
                     name: newShoppingItem.value.name,
                     price: newShoppingItem.value.price,
-                    imgUrl: 'https://via.placeholder.com/150/f9fafb/555555?text=Shopping', 
+                    // 如果用戶沒有輸入圖片 URL，則使用預設圖片
+                    imgUrl: newShoppingItem.value.imgUrl || defaultImg, 
                     purchased: false
                 };
                 shoppingList.value.push(item);
-                newShoppingItem.value = { name: '', price: null }; 
+                newShoppingItem.value = { name: '', price: null, imgUrl: '' }; 
                 showShoppingModal.value = false;
             }
             
@@ -1078,6 +1082,10 @@
                     if (index !== -1) todoList.value[index] = item.data;
                 } else if (item.type === 'Shopping') {
                     const index = shoppingList.value.findIndex(i => i.id === itemId);
+                    // 確保 imgUrl 如果被清空，能設定回預設值
+                    if (!item.data.imgUrl) {
+                        item.data.imgUrl = 'https://via.placeholder.com/150/f9fafb/555555?text=Shopping';
+                    }
                     if (index !== -1) shoppingList.value[index] = item.data;
                 } else if (item.type === 'Accounting') {
                     const index = expenses.value.findIndex(i => i.id === itemId);
@@ -1111,34 +1119,33 @@
             
             onMounted(() => {
                 document.documentElement.style.setProperty('--primary-color', primaryColorInput.value);
-                
-                // 初始化日期設定 (如果預設值是 '2025-12-08'，這會被今天的日期取代)
-                const defaultStartDate = days.value.length > 1 ? days.value[1].date : todayISO;
-                tripStartDate.value = defaultStartDate;
-                currentDay.value = defaultStartDate;
-
+                // 首次載入時，先確保基礎設定正確
                 fetchExchangeRate(); 
                 fetchWeather(); 
+                // 首次載入時，更新一次航班狀態以顯示預設時間
+                fetchFlightStatus(true); 
                 
                 // 每 5 分鐘更新一次匯率和航班狀態
                 setInterval(() => {
                     fetchExchangeRate();
-                    fetchFlightStatus();
+                    fetchWeather(); // 天氣也需要自動更新
                 }, 300000); 
+                
+                if (days.value.length > 1) {
+                    newExpense.value.date = currentDay.value;
+                }
             });
 
             return {
-                appTitle, currentTab, 
-                // 【已修正】日期設定
-                tripStartDate, totalTripDays, 
+                appTitle, currentTab, tripStartDate, totalTripDays, 
                 days, currentDay, currentDayLabel,
                 primaryColor, primaryColorInput, appBgColor, updateTheme,
                 // 貨幣與匯率
                 baseCurrency, tripCurrency, exchangeRate, baseCurrencySymbol, getCurrencySymbol, fetchExchangeRate, convertToBaseCurrency,
                 // 天氣
-                tripCityName, tripCityNameInput, weather, fetchWeather, updateWeatherLocation,
+                tripCityName, weather, fetchWeather, 
                 // 航班
-                flightInfo, fetchFlightStatus, getFlightStatusKey, 
+                flightInfo, fetchFlightStatus, getFlightStatusKey, formatTime, 
                 // 記帳功能相關
                 expenses, expenseFilter, filteredExpenses, totalExpense,
                 showAccountingModal, newExpense, addExpense,
