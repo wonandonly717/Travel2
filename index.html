@@ -15,16 +15,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
 
     <style>
+        /* 由於我們在 Vue 中直接綁定 style，這裡只保留基礎 CSS */
         body {
             font-family: 'Zen Maru Gothic', sans-serif;
-            background-color: #f0f4f8; 
+            background-color: transparent !important; /* 確保 body 本身沒有顏色 */
             -webkit-tap-highlight-color: transparent;
             overflow-x: hidden;
             color: #1e293b;
             overscroll-behavior-y: none;
-            /* 💡 修正 1: 確保 body 上的變數是有效的 */
-            --custom-bg-color: #f0f4f8; /* 預設值 */
-            --custom-bg-image: none; /* 預設值 */
+            /* 定義一個 CSS 變數作為備用顏色，但主要依賴 app-bg */
+            --default-bg-color: #f0f4f8; 
         }
         
         /* 1. 最底層：背景圖片/顏色 */
@@ -34,37 +34,16 @@
             z-index: -2;
             pointer-events: none;
             transition: background-color 0.5s ease, background-image 0.5s ease; 
-            /* 💡 修正 2: 預設就套用自訂顏色變數 */
-            background-color: var(--custom-bg-color); 
-        }
-        
-        /* 預設圖片樣式：預設顏色+預設圖 */
-        .app-bg.bg-default {
-            background-image: url('https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?q=80&w=2070&auto=format&fit=crop');
             background-size: cover;
             background-position: center center;
+            background-repeat: no-repeat;
         }
 
-        /* 自訂顏色樣式：只套用顏色，清除圖片 */
-        .app-bg.bg-custom-color { 
-            background-image: none !important; 
-        } 
-
-        /* 自訂圖片樣式：套用顏色 + 自訂圖 (圖片會疊在顏色上) */
-        .app-bg.bg-custom-image {
-            /* 💡 修正 3: 直接使用變數，它已經包含 url() */
-            background-image: var(--custom-bg-image); 
-            background-size: cover;
-            background-position: center center;
-        }
-
-
-        /* 2. 中間層：毛玻璃遮罩 (獨立出來，不再包裹內容) */
+        /* 2. 中間層：毛玻璃遮罩 */
         .app-blur-layer {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            /* 讓毛玻璃的底色有一點點自訂色的傾向 */
-            background-color: var(--custom-bg-color-alpha, rgba(255, 255, 255, 0.25)); 
+            background-color: rgba(255, 255, 255, 0.25); /* 基本底色 */
             backdrop-filter: blur(4px); 
             z-index: -1;
             pointer-events: none;
@@ -94,12 +73,12 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 
-        /* Liquid Glass 效果 - 讓它半透明，可以看到背景色/圖 */
+        /* Liquid Glass 效果 - 提高透明度穿透性 */
         .liquid-glass {
-            /* 💡 修正 4: 使用 rgba() 讓它有點透明度，並以白色為基底 */
-            background: rgba(255, 255, 255, 0.75); 
-            backdrop-filter: blur(24px) saturate(200%);
-            -webkit-backdrop-filter: blur(24px) saturate(200%);
+            /* 💡 修正 1: 讓背景有更高的透明度 */
+            background: rgba(255, 255, 255, 0.5) !important; 
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.8);
             border-bottom: 1px solid rgba(255, 255, 255, 0.4);
             border-right: 1px solid rgba(255, 255, 255, 0.4);
@@ -166,12 +145,9 @@
         }
     </style>
 </head>
-<body :style="{
-    '--custom-bg-color': customBgColor, 
-    '--custom-bg-image': customBgImage ? 'url(\'' + customBgImage + '\')' : 'none'
-}">
+<body> 
 <div id="app">
-    <div class="app-bg" :class="getAppBgClass()"></div> 
+    <div class="app-bg" :style="getAppBgStyle()"></div> 
     <div class="app-blur-layer"></div>
     
     <div id="scroll-container">
@@ -672,7 +648,7 @@
                 </div>
                 
                 <div class="text-center text-[10px] text-slate-400 font-bold mt-8">
-                    Travel Planner v1.7 (深度修正背景與顏色綁定) <br>
+                    Travel Planner v1.8 (強制 Vue 樣式綁定) <br>
                 </div>
             </div>
 
@@ -835,11 +811,26 @@
             const customBgColor = ref('#f0f4f8'); 
             const customBgImage = ref(null); // 儲存 Base64 圖片字串
 
-            // 💡 修正 9: 根據 appBgColor 決定背景 class 的邏輯
-            const getAppBgClass = () => {
-                if (appBgColor.value === 'custom_image') return 'bg-custom-image';
-                if (appBgColor.value === 'custom_color') return 'bg-custom-color';
-                return 'bg-default'; 
+            // 💡 修正 5: 核心邏輯 - 直接返回 style 物件，強制覆蓋樣式
+            const getAppBgStyle = () => {
+                const style = {};
+                
+                // 1. 設定背景顏色 (無論哪種模式，都使用 customBgColor 作為底色)
+                style['background-color'] = customBgColor.value;
+
+                // 2. 根據模式設定圖片
+                if (appBgColor.value === 'default') {
+                    // 預設圖片 (覆蓋顏色，但如果有透明度還是會露出 customBgColor)
+                    style['background-image'] = 'url(\'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?q=80&w=2070&auto=format&fit=crop\')';
+                } else if (appBgColor.value === 'custom_image' && customBgImage.value) {
+                    // 自訂圖片 (疊在顏色上)
+                    style['background-image'] = `url('${customBgImage.value}')`;
+                } else {
+                    // custom_color 模式 或 custom_image 但無圖
+                    style['background-image'] = 'none';
+                }
+                
+                return style;
             };
             
             // 幣別符號對應表
@@ -1031,7 +1022,7 @@
                 }
             };
             
-            // 💡 修正 10: 處理背景圖片上傳的邏輯 (只上傳，不自動選中)
+            // 💡 修正 6: 處理背景圖片上傳的邏輯 (只上傳，不自動選中)
             const handleBgImageUpload = (event) => {
                 const file = event.target.files[0];
                 if (file) {
@@ -1043,7 +1034,7 @@
                     reader.onload = (e) => {
                         customBgImage.value = e.target.result;
                         saveToLocalStorage();
-                        alert('背景圖片上傳成功！請點擊下方的「設為背景」按鈕套用。');
+                        alert('背景圖片上傳成功！請點擊下方的「設為背景 (疊圖)」按鈕套用。');
                     };
                     reader.readAsDataURL(file);
                 }
@@ -1113,8 +1104,8 @@
             const toggleBought = (item) => { item.bought = !item.bought; saveToLocalStorage(); };
 
             const saveToLocalStorage = () => {
-                // 使用 v17 版本號
-                localStorage.setItem('trip_planner_v17', JSON.stringify({ 
+                // 使用 v18 版本號
+                localStorage.setItem('trip_planner_v18', JSON.stringify({ 
                     settings: { 
                         startDate: startDate.value, 
                         duration: tripDuration.value,
@@ -1131,9 +1122,9 @@
                 }));
             };
             
-            // 處理版本兼容性
+            // 處理版本兼容性 (這次只載入 v18 版本)
             const loadData = () => {
-                let data = JSON.parse(localStorage.getItem('trip_planner_v17'));
+                let data = JSON.parse(localStorage.getItem('trip_planner_v18'));
                 
                 if (data) {
                     if (data.settings) { 
@@ -1191,7 +1182,7 @@
 
             const exportData = () => {
                 const data = {
-                    version: '1.7',
+                    version: '1.8',
                     exportDate: new Date().toISOString(),
                     settings: { 
                         startDate: startDate.value, 
@@ -1345,7 +1336,7 @@
                 toggleTodo, toggleBought, handleImageUpload, handleBgImageUpload, sortableList, 
                 startDate, tripDuration,
                 // 設定相關
-                appBgColor, customBgColor, customBgImage, getAppBgClass, 
+                appBgColor, customBgColor, customBgImage, getAppBgStyle, // 💡 修正 7: 變更為 getAppBgStyle
                 tripTitle, 
                 baseCurrency, 
                 targetCurrency, 
