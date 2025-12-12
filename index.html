@@ -337,7 +337,7 @@
                         <h3 class="text-4xl font-black tracking-tight">
                             {{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalExpenseTarget.toLocaleString() : '-' }}
                         </h3>
-                        <p class="text-xs opacity-70 mt-1">{{ baseCurrency }} 總計 {{ getCurrencySymbol(baseCurrency) }}{{ totalExpenseBase.toLocaleString() || 0 }}</p>
+                        <p class="text-xs opacity-70 mt-1">{{ baseCurrency }} 總計 {{ getCurrencySymbol(baseCurrency) }}{{ totalExpenseBase.toLocaleString() }}</p>
                     </div>
                     <div class="grid grid-cols-2 gap-4 border-t border-white/20 pt-4 mt-2">
                         <div class="text-center">
@@ -346,28 +346,28 @@
                                 <span class="text-[10px] font-bold">現金</span>
                             </div>
                             <div class="font-black text-xl">{{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalCashTarget.toLocaleString() : '-' }}</div>
-                            <div class="text-[10px] opacity-70">{{ getCurrencySymbol(baseCurrency) }}{{ totalCashBase.toLocaleString() || 0 }}</div>
+                            <div class="text-[10px] opacity-70">{{ getCurrencySymbol(baseCurrency) }}{{ totalCashBase.toLocaleString() }}</div>
                         </div>
                         <div class="text-center">
                             <div class="flex items-center justify-center gap-1 text-purple-200 mb-1">
                                 <i class="fas fa-credit-card text-xs"></i> <span class="text-[10px] font-bold">信用卡</span>
                             </div>
                             <div class="font-black text-lg">{{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalCardTarget.toLocaleString() : '-' }}</div>
-                            <div class="text-[10px] opacity-70">{{ getCurrencySymbol(baseCurrency) }}{{ totalCardBase.toLocaleString() || 0 }}</div>
+                            <div class="text-[10px] opacity-70">{{ getCurrencySymbol(baseCurrency) }}{{ totalCardBase.toLocaleString() }}</div>
                         </div>
                         <div class="text-center">
                             <div class="flex items-center justify-center gap-1 text-blue-200 mb-1">
                                 <i class="fab fa-alipay text-xs"></i> <span class="text-[10px] font-bold">電子支付1</span>
                             </div>
                             <div class="font-black text-lg">{{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalEpay1Target.toLocaleString() : '-' }}</div>
-                            <div class="text-[10px] opacity-70">{{ getCurrencySymbol(baseCurrency) }}{{ totalEpay1Base.toLocaleString() || 0 }}</div>
+                            <div class="text-[10px] opacity-70">{{ getCurrencySymbol(baseCurrency) }}{{ totalEpay1Base.toLocaleString() }}</div>
                         </div>
                       <div class="text-center">
                             <div class="flex items-center justify-center gap-1 text-red-200 mb-1">
                                 <i class="fas fa-qrcode text-xs"></i> <span class="text-[10px] font-bold">電子支付2</span>
                             </div>
                             <div class="font-black text-lg">{{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalEpay2Target.toLocaleString() : '-' }}</div>
-                            <div class="text-[10px] opacity-70">{{ getCurrencySymbol(baseCurrency) }}{{ totalEpay2Base.toLocaleString() || 0 }}</div>
+                            <div class="text-[10px] opacity-70">{{ getCurrencySymbol(baseCurrency) }}{{ totalEpay2Base.toLocaleString() }}</div>
                         </div>
                     </div>
                 </div>
@@ -758,11 +758,8 @@
             const startDate = ref(today); 
             const tripDuration = ref(5);
             
-            // 修正: 旅程標題預設值改為通用
             const tripTitle = ref('我的旅行計畫');
-            // 新增: 當地幣別 (Base Currency)，預設為 TWD
             const baseCurrency = ref('TWD');
-            // 目標換算幣別，預設為 HKD
             const targetCurrency = ref('HKD');
             
             // 背景顏色狀態
@@ -831,6 +828,7 @@
             const infoList = ref([]);
             let sortableInstance = null;
             const sortableList = ref(null);
+            const dateContainer = ref(null); // 新增 dateContainer 的 ref
 
             const dailyItinerary = computed(() => itineraryData.value.filter(item => item.date === selectedDate.value));
             
@@ -853,12 +851,10 @@
             const totalEpay2Base = computed(() => calculateBaseTotal(expenses.value.filter(e => e.paymentMethod === 'epay2')));
             const totalEpay2Target = computed(() => calculateTarget(totalEpay2Base.value));
             
+            // ✅ 修正: 移除不必要的 map，直接使用 expenseFilter.value 進行篩選
             const filteredExpenses = computed(() => {
                 if (expenseFilter.value === 'all') return expenses.value;
-                // 修正: 記帳篩選的 paymentMethod 名稱
-                const map = { alipay: 'epay1', paypay: 'epay2' }; 
-                const filterKey = map[expenseFilter.value] || expenseFilter.value;
-                return expenses.value.filter(e => e.paymentMethod === filterKey);
+                return expenses.value.filter(e => e.paymentMethod === expenseFilter.value);
             });
 
             // 天氣模擬 (移除月份判斷，使用更通用的範圍)
@@ -1255,6 +1251,7 @@
                 if(selectedDate.value !== 'todo') initSortable();
                 setTimeout(() => scrollToSelectedDate(), 500); 
 
+                // 首次載入時，如果匯率尚未設定，嘗試獲取
                 if (exchangeRate.value === null) {
                     fetchExchangeRate();
                 }
