@@ -15,18 +15,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
 
     <style>
-        /* v2.0 修正：確保 body 透明，並統一 liquid-glass 效果 */
+        /* v3.1 變數化樣式 */
         body {
             font-family: 'Zen Maru Gothic', sans-serif;
             background-color: transparent !important; 
             -webkit-tap-highlight-color: transparent;
             overflow-x: hidden;
-            color: #1e293b;
+            color: var(--text-color, #1e293b); /* 使用 CSS 變數 */
             overscroll-behavior-y: none;
-            --default-bg-color: #f0f4f8; 
         }
         
-        /* 1. 最底層：背景圖片/顏色 */
         .app-bg {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -38,17 +36,15 @@
             background-repeat: no-repeat;
         }
 
-        /* 2. 中間層：毛玻璃遮罩 (保留輕微模糊) */
         .app-blur-layer {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(255, 255, 255, 0.25); 
+            background-color: var(--blur-color, rgba(255, 255, 255, 0.25)); 
             backdrop-filter: blur(4px); 
             z-index: -1;
             pointer-events: none;
         }
 
-        /* 3. 內容捲動層 */
         #scroll-container {
             max-width: 480px;
             margin: 0 auto;
@@ -61,8 +57,9 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .bg-custom-blue { background-color: #6B8CB8; }
-        .text-custom-blue { color: #5076a8; }
+        .text-custom-primary { color: var(--primary-color, #5076a8); }
+        .bg-custom-primary { background-color: var(--primary-color, #5076a8); }
+        .border-custom-primary { border-color: var(--primary-color, #5076a8); }
         
         #map { width: 100%; height: 100%; z-index: 1; }
 
@@ -72,49 +69,22 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 
-        /* 💡 Liquid Glass 效果 - 使用更高的透明度讓背景穿透 */
+        /* 💡 Liquid Glass 效果 - 使用 CSS 變數調整透明度和顏色 */
         .liquid-glass {
-            background: rgba(255, 255, 255, 0.3) !important; /* 更高的透明度 */
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-            border-right: 1px solid rgba(255, 255, 255, 0.4);
+            background: var(--card-bg-color, rgba(255, 255, 255, 0.3)) !important; 
+            backdrop-filter: blur(var(--blur-intensity, 24px)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--blur-intensity, 24px)) saturate(180%);
+            border: 1px solid var(--card-border-light, rgba(255, 255, 255, 0.8));
+            border-bottom: 1px solid var(--card-border-dark, rgba(255, 255, 255, 0.4));
+            border-right: 1px solid var(--card-border-dark, rgba(255, 255, 255, 0.4));
             box-shadow: 
                 0 8px 32px 0 rgba(31, 38, 135, 0.1),
-                inset 0 0 0 1px rgba(255, 255, 255, 0.3),
-                inset 0 10px 20px rgba(255, 255, 255, 0.1); /* 減少內陰影，更通透 */
+                inset 0 0 0 1px var(--card-border-light, rgba(255, 255, 255, 0.3)),
+                inset 0 10px 20px rgba(255, 255, 255, 0.1); 
             position: relative;
             overflow: hidden;
         }
 
-        .liquid-glass::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(
-                to right,
-                rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0.6) 50%, /* 減少反光強度 */
-                rgba(255, 255, 255, 0) 100%
-            );
-            transform: skewX(-25deg);
-            pointer-events: none;
-            opacity: 0.3; 
-            transition: left 0.5s;
-        }
-
-        /* 導航欄固定樣式優化 */
-        .bottom-nav {
-            position: fixed;
-            bottom: 32px; 
-            left: 24px;
-            right: 24px;
-            z-index: 9999;
-            max-width: 420px;
-            margin: 0 auto;
-        }
-        
         .color-picker-wrapper {
             display: inline-block;
             width: 40px;
@@ -135,7 +105,7 @@
     </style>
 </head>
 <body> 
-<div id="app">
+<div id="app" :style="cssVars">
     <div class="app-bg" :style="getAppBgStyle()"></div> 
     <div class="app-blur-layer"></div>
     
@@ -145,13 +115,13 @@
              class="sticky top-0 z-40 liquid-glass pt-4 pb-2 rounded-b-3xl border-t-0 shadow-xl shadow-slate-200/50">
             <div class="px-6 mb-3 flex justify-between items-center">
                 <div>
-                    <h1 class="text-xl font-black text-slate-800 tracking-widest flex items-center gap-2 truncate">
+                    <h1 class="text-xl font-black tracking-widest flex items-center gap-2 truncate" :style="{ color: themeColors.textColor }">
                         {{ tripTitle }}
                     </h1>
                 </div>
                 <div class="text-right">
                     <div class="text-[10px] text-slate-600 font-bold">目前匯率 ({{ baseCurrency }}/{{ targetCurrency }})</div>
-                    <div class="font-bold text-custom-blue text-sm">
+                    <div class="font-bold text-sm text-custom-primary">
                         1 {{ getCurrencySymbol(baseCurrency) }} ≈ {{ exchangeRate ? exchangeRate.toFixed(4) : '未設定' }} {{ getCurrencySymbol(targetCurrency) }}
                     </div>
                 </div>
@@ -170,7 +140,7 @@
                 <div v-for="(day, index) in tripDates" :key="index" @click="selectDate(day.date)"
                     :id="'date-btn-' + day.date"
                     class="snap-center flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 cursor-pointer border-2"
-                    :class="selectedDate === day.date ? 'bg-custom-blue border-blue-300 text-white shadow-lg shadow-blue-200 scale-105' : 'bg-white/50 border-slate-200 text-slate-400 backdrop-blur-md'"
+                    :style="selectedDate === day.date ? { backgroundColor: themeColors.primaryColor, borderColor: themeColors.primaryColor, color: themeColors.primaryTextColor, boxShadow: `0 8px 16px ${hexToRgba(themeColors.primaryColor, 0.3)}` } : { backgroundColor: themeColors.cardBgColor, borderColor: 'rgba(255, 255, 255, 0.7)', color: themeColors.secondaryTextColor, backdropFilter: `blur(${themeColors.blurIntensity})` }"
                 >
                     <span class="text-[11px] font-bold">{{ day.day }}</span>
                     <span class="text-xl font-black">{{ day.date.split('-')[2] }}</span>
@@ -183,7 +153,7 @@
             
             <div v-if="currentTab === 'schedule' && selectedDate === 'todo'" class="space-y-4 animate-fade-in">
                 <div class="flex justify-between items-end mb-2 px-2">
-                    <h2 class="text-lg font-bold text-slate-800 drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50">行前清單</h2>
+                    <h2 class="text-lg font-bold drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50" :style="{ color: themeColors.textColor }">行前清單</h2>
                     <button @click="openModal('todo')" class="text-sm bg-orange-100 text-orange-700 px-3 py-1.5 rounded-full hover:bg-orange-200 transition font-bold shadow-sm">
                         <i class="fas fa-plus mr-1"></i>新增
                     </button>
@@ -197,7 +167,7 @@
                                 :class="item.done ? 'bg-orange-400 border-orange-400 text-white' : 'border-slate-400 text-transparent'">
                                 <i class="fas fa-check text-xs"></i>
                             </button>
-                            <span :class="{'line-through text-slate-500': item.done, 'text-slate-800 font-bold': !item.done}">{{ item.text }}</span>
+                            <span :class="{'line-through text-slate-500': item.done, 'font-bold': !item.done}" :style="{ color: item.done ? themeColors.secondaryTextColor : themeColors.textColor }">{{ item.text }}</span>
                         </div>
                         <button @click="deleteItem('todo', item.id)" class="text-slate-400 hover:text-red-500"><i class="fas fa-trash"></i></button>
                     </div>
@@ -206,26 +176,33 @@
 
             <div v-if="currentTab === 'schedule' && selectedDate !== 'todo'" class="space-y-4 animate-fade-in">
                 
-                <div class="liquid-glass rounded-2xl p-4 shadow-sm border border-white/40 flex items-center justify-between text-slate-700">
+                <div class="liquid-glass rounded-2xl p-4 shadow-sm border border-white/40 flex items-center justify-between" :style="{ color: themeColors.textColor }">
                     <div class="flex items-center gap-3">
                         <div class="text-4xl text-sky-500 drop-shadow-sm">
                             <i :class="weatherInfo.icon"></i>
                         </div>
                         <div>
-                            <div class="text-2xl font-black leading-none text-slate-800">{{ weatherInfo.temp }}°C</div>
-                            <div class="text-[10px] font-bold opacity-70 mt-1">體感 {{ weatherInfo.feel }}°C · {{ weatherInfo.desc }}</div>
+                            <div class="text-2xl font-black leading-none" :style="{ color: themeColors.textColor }">
+                                {{ weatherInfo.max_temp ? `${weatherInfo.max_temp}°C / ${weatherInfo.min_temp}°C` : '載入中...' }}
+                            </div>
+                            <div class="text-[10px] font-bold opacity-70 mt-1" :style="{ color: themeColors.secondaryTextColor }">
+                                {{ weatherInfo.desc }} · 體感 {{ weatherInfo.feel }}°C
+                            </div>
                         </div>
                     </div>
                     <div class="text-right">
                         <div class="text-xs font-bold bg-sky-100 text-sky-600 px-2 py-1 rounded-full mb-1">
-                            <i class="fas fa-map-marker-alt mr-1"></i>當地城市 (模擬)
+                            <i class="fas fa-map-marker-alt mr-1"></i>{{ destinationCity || '當地城市' }}
+                        </div>
+                        <div class="text-[10px] text-slate-500 font-bold">
+                             Lat: {{ destinationLat }} Lng: {{ destinationLng }}
                         </div>
                     </div>
                 </div>
 
                 <div class="flex justify-between items-end px-1 pt-2">
-                     <h2 class="text-lg font-bold text-slate-800 drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50">行程安排</h2>
-                    <button @click="openModal('schedule', null)" class="text-sm bg-[#5076a8] text-white px-4 py-1.5 rounded-full shadow-lg shadow-blue-200/50 transition transform active:scale-95 font-bold">
+                     <h2 class="text-lg font-bold drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50" :style="{ color: themeColors.textColor }">行程安排</h2>
+                    <button @click="openModal('schedule', null)" class="text-sm text-white px-4 py-1.5 rounded-full shadow-lg transition transform active:scale-95 font-bold" :style="{ backgroundColor: themeColors.primaryColor, boxShadow: `0 8px 16px ${hexToRgba(themeColors.primaryColor, 0.3)}` }">
                         <i class="fas fa-plus mr-1"></i>新增
                     </button>
                 </div>
@@ -279,26 +256,26 @@
                                      :class="getCategoryColor(item.category)" style="background-opacity: 0.8;">
                                     <i :class="getCategoryIcon(item.category)"></i>
                                 </div>
-                                <span class="text-sm font-bold text-slate-700 font-mono tracking-tighter">{{ item.time }}</span>
+                                <span class="text-sm font-bold font-mono tracking-tighter" :style="{ color: themeColors.secondaryTextColor }">{{ item.time }}</span>
                             </div>
                             
                             <div class="flex-1 min-w-0">
                                 <div class="flex justify-between items-start">
-                                    <h3 class="font-bold text-slate-800 text-lg truncate drop-shadow-sm">{{ item.location }}</h3>
-                                    <button @click.stop="openModal('schedule', item)" class="text-slate-400 hover:text-custom-blue px-2 transition-colors">
+                                    <h3 class="font-bold text-lg truncate drop-shadow-sm" :style="{ color: themeColors.textColor }">{{ item.location }}</h3>
+                                    <button @click.stop="openModal('schedule', item)" class="text-slate-400 hover:text-custom-primary px-2 transition-colors">
                                         <i class="fas fa-pen text-sm"></i>
                                     </button>
                                 </div>
                                 
                                 <div class="flex items-center mt-1 mb-2">
-                                    <a :href="'https://www.google.com/maps/search/?api=1&query=`。' + encodeURIComponent(item.location + ' ' + item.address)" target="_blank"
+                                    <a :href="'http://maps.google.com/maps?q=' + encodeURIComponent(item.location + ' ' + item.address)" target="_blank"
                                        class="text-[10px] bg-white/60 text-blue-600 px-2 py-1 rounded-lg hover:bg-white transition flex items-center gap-1 font-bold backdrop-blur-sm border border-white/50">
                                         <i class="fas fa-location-arrow"></i> 導航
                                     </a>
-                                    <span class="text-slate-600 text-xs ml-2 truncate font-medium">{{ item.address }}</span>
+                                    <span class="text-xs ml-2 truncate font-medium" :style="{ color: themeColors.secondaryTextColor }">{{ item.address }}</span>
                                 </div>
 
-                                <div v-if="item.note" class="bg-white/40 p-2.5 rounded-xl text-xs text-slate-700 leading-relaxed border border-white/30 backdrop-blur-sm">
+                                <div v-if="item.note" class="bg-white/40 p-2.5 rounded-xl text-xs leading-relaxed border border-white/30 backdrop-blur-sm" :style="{ color: themeColors.secondaryTextColor }">
                                     {{ item.note }}
                                 </div>
                             </div>
@@ -308,7 +285,7 @@
                     </div>
                 </div>
                 
-                <div v-if="dailyItinerary.length === 0" class="text-center py-12 text-slate-600 liquid-glass rounded-3xl">
+                <div v-if="dailyItinerary.length === 0" class="text-center py-12 liquid-glass rounded-3xl" :style="{ color: themeColors.secondaryTextColor }">
                     <p class="font-bold">尚無行程</p>
                 </div>
             </div>
@@ -320,13 +297,13 @@
                         <i class="fas fa-map-pin text-red-400 mr-1"></i> {{ dailyItinerary.length }} 地標
                     </div>
                 </div>
-                <p class="text-xs text-slate-700 mt-4 text-center font-bold bg-white/60 inline-block px-3 py-1 rounded-full backdrop-blur-sm shadow-sm">已自動標記當日行程位置 (需手動輸入經緯度)</p>
+                <p class="text-xs mt-4 text-center font-bold bg-white/60 inline-block px-3 py-1 rounded-full backdrop-blur-sm shadow-sm" :style="{ color: themeColors.secondaryTextColor }">已自動標記當日行程位置 (需手動輸入經緯度)</p>
             </div>
 
             <div v-if="currentTab === 'money'" class="space-y-6 pt-6 animate-fade-in">
-                <h2 class="text-2xl font-black text-slate-800 drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block mx-2 border border-white/50">旅費管理</h2>
+                <h2 class="text-2xl font-black drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block mx-2 border border-white/50" :style="{ color: themeColors.textColor }">旅費管理</h2>
                 
-                <div class="bg-gradient-to-br from-[#6B8CB8] to-[#4A6FA5] p-6 rounded-3xl text-white shadow-xl shadow-blue-900/20 relative overflow-hidden mx-1">
+                <div class="p-6 rounded-3xl text-white shadow-xl relative overflow-hidden mx-1" :style="{ backgroundImage: `linear-gradient(to bottom right, ${themeColors.primaryColor}, ${hexToRgba(themeColors.primaryColor, 0.8)})`, boxShadow: `0 10px 30px ${hexToRgba(themeColors.primaryColor, 0.4)}` }">
                     <i class="fas fa-coins absolute -right-6 -bottom-6 text-9xl opacity-10 rotate-12"></i>
                     
                     <div class="mb-4 text-center">
@@ -372,12 +349,12 @@
                 <div>
                     <div class="flex flex-col gap-3 mb-4 px-1">
                         <div class="flex justify-between items-center">
-                             <h3 class="font-bold text-slate-800 bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50">支出明細</h3>
-                            <button @click="openModal('money')" class="text-[#5076a8] text-sm font-bold bg-white/90 px-3 py-1.5 rounded-full shadow-sm liquid-glass"><i class="fas fa-plus mr-1"></i>記一筆</button>
+                             <h3 class="font-bold drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50" :style="{ color: themeColors.textColor }">支出明細</h3>
+                            <button @click="openModal('money')" class="text-sm font-bold bg-white/90 px-3 py-1.5 rounded-full shadow-sm liquid-glass" :style="{ color: themeColors.primaryColor }"><i class="fas fa-plus mr-1"></i>記一筆</button>
                         </div>
                         
                             <div class="flex liquid-glass p-1 rounded-xl overflow-x-auto no-scrollbar gap-1">
-                            <button @click="expenseFilter = 'all'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'all' ? 'bg-white shadow text-[#5076a8]' : 'text-slate-600'">全部</button>
+                            <button @click="expenseFilter = 'all'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'all' ? 'bg-white shadow' : 'text-slate-600'" :style="expenseFilter === 'all' ? { color: themeColors.primaryColor } : {}">全部</button>
                             <button @click="expenseFilter = 'cash'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'cash' ? 'bg-white shadow text-green-600' : 'text-slate-600'">現金</button>
                             <button @click="expenseFilter = 'card'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'card' ? 'bg-white shadow text-purple-600' : 'text-slate-600'">信用卡</button>
                             <button @click="expenseFilter = 'epay1'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'epay1' ? 'bg-white shadow text-blue-600' : 'text-slate-600'">電子支付1</button>
@@ -402,21 +379,21 @@
                                     <i v-else class="fas fa-qrcode"></i>
                                 </div>
                                 <div>
-                                    <p class="font-bold text-slate-800">{{ exp.item }}</p>
+                                    <p class="font-bold" :style="{ color: themeColors.textColor }">{{ exp.item }}</p>
                                     <p class="text-[10px] text-slate-600 font-bold bg-white/70 inline-block px-1.5 rounded mt-0.5 backdrop-blur-sm">
                                         {{ exp.date }}
                                     </p>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="font-bold text-slate-800">-{{ getCurrencySymbol(baseCurrency) }}{{ exp.amount.toLocaleString() }}</p>
+                                <p class="font-bold" :style="{ color: themeColors.textColor }">-{{ getCurrencySymbol(baseCurrency) }}{{ exp.amount.toLocaleString() }}</p>
                                 <p class="text-xs text-slate-600 font-medium">
                                     ≈ {{ exchangeRate ? getCurrencySymbol(targetCurrency) + Math.round(exp.amount * exchangeRate).toLocaleString() : '匯率未設' }}
                                 </p>
                             </div>
                             <button @click="deleteItem('expense', exp.id)" class="text-slate-300 hover:text-red-400 ml-2 px-2"><i class="fas fa-times"></i></button>
                         </div>
-                        <div v-if="filteredExpenses.length === 0" class="text-center text-sm text-slate-600 py-4 liquid-glass rounded-2xl">
+                        <div v-if="filteredExpenses.length === 0" class="text-center text-sm liquid-glass rounded-2xl py-4" :style="{ color: themeColors.secondaryTextColor }">
                             沒有相關的支出紀錄
                         </div>
                     </div>
@@ -425,8 +402,8 @@
 
             <div v-if="currentTab === 'shop'" class="space-y-6 pt-6 animate-fade-in">
                  <div class="flex justify-between items-center px-2">
-                    <h2 class="text-2xl font-black text-slate-800 drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50">購物清單</h2>
-                     <button @click="openModal('shop')" class="bg-slate-800 text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition">
+                    <h2 class="text-2xl font-black drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50" :style="{ color: themeColors.textColor }">購物清單</h2>
+                     <button @click="openModal('shop')" class="w-10 h-10 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition" :style="{ backgroundColor: themeColors.primaryColor, color: themeColors.primaryTextColor, boxShadow: `0 4px 12px ${hexToRgba(themeColors.primaryColor, 0.4)}` }">
                         <i class="fas fa-plus"></i>
                     </button>
                 </div>
@@ -444,8 +421,8 @@
                         </div>
 
                         <div>
-                            <h3 class="font-bold text-slate-800 text-sm mb-1 line-clamp-2" :class="{'line-through text-slate-500': item.bought}">{{ item.name }}</h3>
-                             <p class="text-xs text-slate-700 font-bold">{{ getCurrencySymbol(baseCurrency) }}{{ (item.price || 0).toLocaleString() }}</p>
+                            <h3 class="font-bold text-sm mb-1 line-clamp-2" :class="{'line-through text-slate-500': item.bought}" :style="{ color: item.bought ? themeColors.secondaryTextColor : themeColors.textColor }">{{ item.name }}</h3>
+                             <p class="text-xs font-bold" :style="{ color: themeColors.secondaryTextColor }">{{ getCurrencySymbol(baseCurrency) }}{{ (item.price || 0).toLocaleString() }}</p>
                         </div>
                         
                         <div class="flex justify-between items-end mt-3">
@@ -462,7 +439,7 @@
 
             <div v-if="currentTab === 'info'" class="space-y-6 pt-6 animate-fade-in">
                 <div class="flex justify-between items-center px-2">
-                    <h2 class="text-2xl font-black text-slate-800 drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50">資訊整理</h2>
+                    <h2 class="text-2xl font-black drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50" :style="{ color: themeColors.textColor }">資訊整理</h2>
                     <button @click="openModal('info')" class="text-sm bg-purple-100 text-purple-600 px-3 py-1.5 rounded-full hover:bg-purple-200 transition font-bold shadow-sm">
                         <i class="fas fa-plus mr-1"></i>新增
                     </button>
@@ -471,34 +448,99 @@
                 <div class="space-y-3 pb-4">
                     <div v-for="info in infoList" :key="info.id" class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50">
                         <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-bold text-slate-800 text-lg border-l-4 border-purple-300 pl-3">{{ info.title }}</h3>
+                            <h3 class="font-bold text-lg border-l-4 border-purple-300 pl-3" :style="{ color: themeColors.textColor }">{{ info.title }}</h3>
                             <div class="flex gap-2">
-                                <button @click="openModal('info', info)" class="text-slate-400 hover:text-custom-blue"><i class="fas fa-pen"></i></button>
+                                <button @click="openModal('info', info)" class="text-slate-400 hover:text-custom-primary"><i class="fas fa-pen"></i></button>
                                 <button @click="deleteItem('info', info.id)" class="text-slate-400 hover:text-red-400"><i class="fas fa-times"></i></button>
                             </div>
                         </div>
-                        <div class="text-slate-700 text-sm whitespace-pre-wrap leading-relaxed font-medium">{{ info.content }}</div>
+                        <div class="text-sm whitespace-pre-wrap leading-relaxed font-medium" :style="{ color: themeColors.secondaryTextColor }">{{ info.content }}</div>
                     </div>
                 </div>
             </div>
 
             <div v-if="currentTab === 'settings'" class="space-y-6 pt-6 animate-fade-in">
                 <div class="px-2">
-                    <h2 class="text-2xl font-black text-slate-800 drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50">行程設定</h2>
+                    <h2 class="text-2xl font-black drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50" :style="{ color: themeColors.textColor }">行程設定</h2>
                 </div>
                 
                 <div class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50 space-y-4">
-                    <h3 class="font-bold text-slate-800 border-l-4 border-slate-500 pl-3">旅程標題</h3>
-                    <input v-model="tripTitle" type="text" @change="saveToLocalStorage" placeholder="例如: 2025 泰國清邁遊" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 text-lg">
+                    <h3 class="font-bold border-l-4 border-slate-500 pl-3" :style="{ color: themeColors.textColor }">基本資訊</h3>
+                    
+                     <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">旅程標題</label>
+                        <input v-model="tripTitle" type="text" @change="saveToLocalStorage" placeholder="例如: 2025 泰國清邁遊" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 text-lg">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">目的地城市名稱 (顯示用)</label>
+                        <input v-model="destinationCity" type="text" @change="saveToLocalStorage" placeholder="例如: 曼谷 / Tokyo" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 text-lg">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                         <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">天氣查詢經度 (Lat)</label>
+                            <input v-model.number="destinationLat" type="number" step="any" @change="saveToLocalStorage(); fetchRealtimeWeather()" placeholder="緯度 (如: 35.6895)" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">天氣查詢緯度 (Lng)</label>
+                            <input v-model.number="destinationLng" type="number" step="any" @change="saveToLocalStorage(); fetchRealtimeWeather()" placeholder="經度 (如: 139.6917)" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200">
+                        </div>
+                    </div>
+                     <p class="text-xs text-slate-600 font-bold bg-yellow-50/50 p-3 rounded-xl border border-yellow-200">
+                        <i class="fas fa-map-pin mr-1 text-yellow-500"></i>
+                        請填寫**準確的經緯度**，天氣卡片會根據此座標即時顯示天氣。
+                    </p>
+
+                </div>
+
+
+                <div class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50 space-y-4">
+                    <h3 class="font-bold border-l-4 border-slate-500 pl-3" :style="{ color: themeColors.textColor }">主題顏色設定</h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-2 rounded-xl border border-slate-100 bg-white/50">
+                            <label class="text-sm font-bold" :style="{ color: themeColors.textColor }">主色 (按鈕、日期選單)</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" v-model="themeColors.primaryColor" @change="saveToLocalStorage">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded-xl border border-slate-100 bg-white/50">
+                            <label class="text-sm font-bold" :style="{ color: themeColors.textColor }">主色文字 (主色塊上的文字)</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" v-model="themeColors.primaryTextColor" @change="saveToLocalStorage">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded-xl border border-slate-100 bg-white/50">
+                            <label class="text-sm font-bold" :style="{ color: themeColors.textColor }">內文顏色</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" v-model="themeColors.textColor" @change="saveToLocalStorage">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded-xl border border-slate-100 bg-white/50">
+                            <label class="text-sm font-bold" :style="{ color: themeColors.textColor }">次要文字顏色</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" v-model="themeColors.secondaryTextColor" @change="saveToLocalStorage">
+                            </div>
+                        </div>
+                         <div class="flex justify-between items-center p-2 rounded-xl border border-slate-100 bg-white/50">
+                            <label class="text-sm font-bold" :style="{ color: themeColors.textColor }">毛玻璃卡片背景色</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" v-model="themeColors.cardBgColor" @change="saveToLocalStorage">
+                            </div>
+                        </div>
+                    </div>
+
                     <p class="text-xs text-slate-600 font-bold bg-white/50 p-3 rounded-xl">
-                        <i class="fas fa-tag mr-1 text-blue-400"></i>
-                        這個標題會顯示在應用程式上方。
+                        <i class="fas fa-magic mr-1 text-purple-400"></i>
+                        調整顏色後，所有主要元件 (按鈕、文字) 會即時更新。
                     </p>
                 </div>
 
 
                 <div class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50 space-y-4">
-                    <h3 class="font-bold text-slate-800 border-l-4 border-slate-500 pl-3">應用程式外觀</h3>
+                    <h3 class="font-bold border-l-4 border-slate-500 pl-3" :style="{ color: themeColors.textColor }">應用程式背景設定</h3>
+                    
                     <div class="grid grid-cols-3 gap-4 items-center">
                         <button @click="appBgColor = 'default'; saveToLocalStorage()"
                              class="aspect-square w-full rounded-xl cursor-pointer shadow-md transition-all flex flex-col items-center justify-center bg-cover bg-center text-white"
@@ -516,7 +558,7 @@
                                 <div class="color-picker-wrapper">
                                     <input type="color" v-model="customBgColor" @change="appBgColor = 'custom_color'; saveToLocalStorage()" title="選擇背景顏色">
                                 </div>
-                                <span class="text-[10px] font-bold mt-1 text-slate-700">自訂顏色</span>
+                                <span class="text-[10px] font-bold mt-1 text-slate-700">底色</span>
                             </label>
                             <button v-if="appBgColor !== 'custom_color'" @click="appBgColor = 'custom_color'; saveToLocalStorage()" 
                                     class="text-[10px] font-bold mt-1 px-2 py-0.5 rounded-full transition bg-white text-slate-500 border border-slate-200">
@@ -552,7 +594,7 @@
 
 
                 <div class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50 space-y-4">
-                    <h3 class="font-bold text-slate-800 border-l-4 border-slate-500 pl-3">旅程時間</h3>
+                    <h3 class="font-bold border-l-4 border-slate-500 pl-3" :style="{ color: themeColors.textColor }">旅程時間</h3>
                     
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">出發日期</label>
@@ -576,18 +618,18 @@
                 </div>
                 
                  <div class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50 space-y-4">
-                    <h3 class="font-bold text-slate-800 border-l-4 border-slate-500 pl-3">匯率設定</h3>
+                    <h3 class="font-bold border-l-4 border-slate-500 pl-3" :style="{ color: themeColors.textColor }">匯率設定</h3>
                     
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">當地幣別 (旅遊地貨幣)</label>
                          <select v-model="baseCurrency" @change="saveToLocalStorage(); exchangeRate = null;" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100">
                             <option value="TWD">TWD (新台幣)</option>
-                            <option value="HKD">HKD (港幣)</option>
                             <option value="JPY">JPY (日圓)</option>
                             <option value="THB">THB (泰銖)</option>
                             <option value="KRW">KRW (韓元)</option>
                             <option value="USD">USD (美元)</option>
                             <option value="CNY">CNY (人民幣)</option>
+                            <option value="HKD">HKD (港幣)</option>
                             <option value="EUR">EUR (歐元)</option>
                         </select>
                     </div>
@@ -606,27 +648,27 @@
                     </div>
 
                     <div class="flex gap-3 items-center">
-                        <div class="text-3xl font-black text-custom-blue">{{ getCurrencySymbol(baseCurrency) }}1</div>
+                        <div class="text-3xl font-black text-custom-primary">{{ getCurrencySymbol(baseCurrency) }}1</div>
                         <i class="fas fa-arrow-right text-slate-400"></i>
                         <input v-model.number="exchangeRate" type="number" step="0.0001" @change="saveToLocalStorage" placeholder="請手動輸入匯率" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 text-lg text-right">
-                        <div class="text-3xl font-black text-slate-800">{{ getCurrencySymbol(targetCurrency) }}</div>
+                        <div class="text-3xl font-black" :style="{ color: themeColors.textColor }">{{ getCurrencySymbol(targetCurrency) }}</div>
                     </div>
                     <p class="text-xs text-slate-600 font-bold bg-white/50 p-2 rounded-lg">
                         <i class="fas fa-exclamation-triangle mr-1 text-yellow-500"></i>
                         當前匯率為: 1 {{ baseCurrency }} ≈ {{ exchangeRate ? exchangeRate.toFixed(4) : '尚未設定' }} {{ targetCurrency }}。
                     </p>
-                    <button @click="fetchExchangeRate" class="w-full py-2 bg-blue-500 text-white rounded-xl font-bold active:scale-95 transition">
+                    <button @click="fetchExchangeRate" class="w-full py-2 text-white rounded-xl font-bold active:scale-95 transition" :style="{ backgroundColor: themeColors.primaryColor }">
                         <i class="fas fa-sync-alt mr-2"></i>獲取最新實時匯率 ({{ baseCurrency }}/{{ targetCurrency }})
                     </button>
                 </div>
 
 
                 <div class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50 space-y-4">
-                    <h3 class="font-bold text-slate-800 border-l-4 border-green-500 pl-3">資料備份</h3>
+                    <h3 class="font-bold border-l-4 border-green-500 pl-3" :style="{ color: themeColors.textColor }">資料備份</h3>
                     <p class="text-xs text-slate-600 font-bold">建議定期匯出備份，以免更換手機或清除快取時資料遺失。</p>
                     
                     <div class="grid grid-cols-2 gap-3">
-                        <button @click="exportData" class="flex items-center justify-center gap-2 bg-[#5076a8] text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition">
+                        <button @click="exportData" class="flex items-center justify-center gap-2 text-white py-3 rounded-xl font-bold shadow-lg active:scale-95 transition" :style="{ backgroundColor: themeColors.primaryColor, boxShadow: `0 8px 16px ${hexToRgba(themeColors.primaryColor, 0.3)}` }">
                             <i class="fas fa-file-export"></i> 匯出備份
                         </button>
                         
@@ -638,7 +680,7 @@
                 </div>
                 
                 <div class="text-center text-[10px] text-slate-400 font-bold mt-8">
-                    Travel Planner v2.0 (天氣穩定版) <br>
+                    Travel Planner v3.1 (即時天氣API版) <br>
                 </div>
             </div>
 
@@ -648,27 +690,27 @@
 
     <div class="bottom-nav liquid-glass rounded-full backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-slate-200/50 rounded-full">
          <div class="flex justify-between items-center px-1">
-            <button @click="switchTab('schedule')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'schedule' ? 'text-[#5076a8]' : 'text-slate-500'">
+            <button @click="switchTab('schedule')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :style="currentTab === 'schedule' ? { color: themeColors.primaryColor } : { color: themeColors.secondaryTextColor }">
                 <i class="fas fa-route text-xl mb-0.5"></i>
                 <span class="text-[10px] font-bold">行程</span>
             </button>
-            <button @click="switchTab('map')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'map' ? 'text-[#5076a8]' : 'text-slate-500'">
+            <button @click="switchTab('map')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :style="currentTab === 'map' ? { color: themeColors.primaryColor } : { color: themeColors.secondaryTextColor }">
                 <i class="fas fa-map-marked-alt text-xl mb-0.5"></i>
                 <span class="text-[10px] font-bold">地圖</span>
             </button>
-            <button @click="switchTab('money')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'money' ? 'text-[#5076a8]' : 'text-slate-500'">
+            <button @click="switchTab('money')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :style="currentTab === 'money' ? { color: themeColors.primaryColor } : { color: themeColors.secondaryTextColor }">
                 <i class="fas fa-wallet text-xl mb-0.5"></i>
                 <span class="text-[10px] font-bold">記帳</span>
             </button>
-            <button @click="switchTab('shop')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'shop' ? 'text-[#5076a8]' : 'text-slate-500'">
+            <button @click="switchTab('shop')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :style="currentTab === 'shop' ? { color: themeColors.primaryColor } : { color: themeColors.secondaryTextColor }">
                 <i class="fas fa-shopping-bag text-xl mb-0.5"></i>
                 <span class="text-[10px] font-bold">購物</span>
             </button>
-            <button @click="switchTab('info')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'info' ? 'text-purple-600' : 'text-slate-500'">
+            <button @click="switchTab('info')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :style="currentTab === 'info' ? { color: themeColors.secondaryColor } : { color: themeColors.secondaryTextColor }">
                 <i class="fas fa-info-circle text-xl mb-0.5"></i>
                 <span class="text-[10px] font-bold">資訊</span>
             </button>
-                         <button @click="switchTab('settings')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'settings' ? 'text-slate-800' : 'text-slate-500'">
+                         <button @click="switchTab('settings')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :style="currentTab === 'settings' ? { color: themeColors.textColor } : { color: themeColors.secondaryTextColor }">
                 <i class="fas fa-cog text-xl mb-0.5"></i>
                 <span class="text-[10px] font-bold">設定</span>
             </button>
@@ -724,7 +766,7 @@
                 </div>
                 <input v-model="newItem.item" type="text" placeholder="消費項目" class="w-full bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100">
                  <input v-model="newItem.amount" type="number" :placeholder="'金額 (' + baseCurrency + ')'" class="w-full bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 text-lg font-bold border border-slate-100">
-                <div class="text-right text-sm text-custom-blue font-bold" v-if="newItem.amount && exchangeRate">
+                <div class="text-right text-sm text-custom-primary font-bold" v-if="newItem.amount && exchangeRate">
                     ≈ {{ (newItem.amount * exchangeRate).toFixed(1) }} {{ targetCurrency }}
                 </div>
                 <div class="text-right text-sm text-yellow-500 font-bold" v-else-if="newItem.amount">
@@ -764,7 +806,7 @@
 
             <div class="flex space-x-3 mt-6">
                 <button @click="showModal = false" class="flex-1 py-3.5 rounded-xl bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 transition">取消</button>
-                <button @click="saveItem" class="flex-1 py-3.5 rounded-xl bg-[#2C3E50] text-white font-bold shadow-lg shadow-slate-400 hover:bg-[#1a252f] transition">確認</button>
+                <button @click="saveItem" class="flex-1 py-3.5 rounded-xl text-white font-bold shadow-lg hover:brightness-110 transition" :style="{ backgroundColor: themeColors.primaryColor, boxShadow: `0 4px 12px ${hexToRgba(themeColors.primaryColor, 0.4)}`, color: themeColors.primaryTextColor }">確認</button>
             </div>
             <div class="h-4 sm:h-0"></div>
         </div>
@@ -774,40 +816,38 @@
 <script>
     const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
     
-    // 💡 輔助函式：產生隨機天氣數據 (只在初始化時呼叫)
-    const generateRandomWeather = () => {
-        let temp = Math.floor(Math.random() * 20) + 15; // 15°C ~ 34°C
-        let icon = 'fas fa-sun';
-        let desc = '舒適';
-        let feelDiff = 0;
-
-        const iconChoices = [
-            { icon: 'fas fa-sun', desc: '晴朗' },
-            { icon: 'fas fa-cloud-sun', desc: '多雲' },
-            { icon: 'fas fa-cloud', desc: '陰天' },
-            { icon: 'fas fa-cloud-showers-heavy', desc: '有雨' },
-            { icon: 'fas fa-snowflake', desc: '降雪', minTemp: 0 },
-        ];
-
-        let choice = iconChoices[Math.floor(Math.random() * iconChoices.length)];
-        icon = choice.icon;
-        desc = choice.desc;
-
-        if (temp < 10) { 
-            desc = '寒冷';
-            icon = 'fas fa-temperature-low';
-            feelDiff = -3;
-        } else if (temp > 30) { 
-            desc = '炎熱';
-            icon = 'fas fa-sun';
-            feelDiff = 3;
-        } else if (icon === 'fas fa-cloud-showers-heavy') {
-             desc = '有陣雨';
-        }
-
-        return { temp, icon, desc, feel: temp + feelDiff };
+    // 💡 輔助函式：Hex 轉 RGBA (用於 boxShadow)
+    const hexToRgba = (hex, alpha = 1) => {
+        const bigint = parseInt(hex.slice(1), 16);
+        const r = (bigint >> 16) & 255;
+        const g = (bigint >> 8) & 255;
+        const b = bigint & 255;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
 
+    // 💡 WMO 天氣代碼轉換為圖標和描述 (WMO Weather Codes)
+    const getWeatherTranslation = (code) => {
+        let icon = 'fas fa-question-circle';
+        let desc = '資料載入中';
+        let feel = 'N/A';
+        
+        // 這是 Open-Meteo 使用的 WMO Weather Code
+        switch (true) {
+            case code === 0: icon = 'fas fa-sun'; desc = '晴朗'; feel = '舒適'; break;
+            case code === 1 || code === 2: icon = 'fas fa-cloud-sun'; desc = '多雲'; feel = '舒適'; break;
+            case code === 3: icon = 'fas fa-cloud'; desc = '陰天'; feel = '涼爽'; break;
+            case code >= 45 && code <= 48: icon = 'fas fa-smog'; desc = '霧或灰塵'; feel = '涼爽'; break; // Fog and Rime Fog
+            case code >= 51 && code <= 55: icon = 'fas fa-cloud-rain'; desc = '毛毛雨'; feel = '微濕'; break; // Drizzle
+            case code >= 61 && code <= 65: icon = 'fas fa-cloud-showers-heavy'; desc = '降雨'; feel = '濕冷'; break; // Rain
+            case code >= 71 && code <= 75: icon = 'fas fa-snowflake'; desc = '降雪'; feel = '寒冷'; break; // Snow fall
+            case code >= 80 && code <= 82: icon = 'fas fa-cloud-showers-heavy'; desc = '陣雨'; feel = '濕冷'; break; // Rain showers
+            case code >= 85 && code <= 86: icon = 'fas fa-snowflake'; desc = '陣雪'; feel = '極寒'; break; // Snow showers
+            case code >= 95 && code <= 99: icon = 'fas fa-bolt'; desc = '雷暴/冰雹'; feel = '警戒'; break; // Thunderstorm / Hail
+            default: icon = 'fas fa-question-circle'; desc = '未知天氣'; feel = '注意'; break;
+        }
+
+        return { icon, desc, feel };
+    };
 
     createApp({
         setup() {
@@ -828,17 +868,57 @@
             const tripDuration = ref(5);
             
             const tripTitle = ref('我的旅行計畫');
-            const baseCurrency = ref('TWD');
-            const targetCurrency = ref('HKD');
+            const destinationCity = ref('東京'); 
+            // 💡 天氣經緯度設定 (預設東京)
+            const destinationLat = ref(35.6895); 
+            const destinationLng = ref(139.6917); 
             
             // 背景邏輯
             const appBgColor = ref('default'); 
             const customBgColor = ref('#f0f4f8'); 
             const customBgImage = ref(null); 
             
-            // 💡 儲存每個日期的固定天氣資訊
-            const dailyWeather = ref({}); 
+            // 💡 主題顏色配置
+            const themeColors = ref({
+                primaryColor: '#5076a8',        // 主色 (按鈕/選中日期)
+                secondaryColor: '#9333ea',      // 次要色 (Info Tab)
+                textColor: '#1e293b',           // 主要文字顏色
+                secondaryTextColor: '#475569',  // 次要文字顏色 (如備註、時區)
+                primaryTextColor: '#ffffff',    // 主色塊上的文字顏色
+                cardBgColor: 'rgba(255, 255, 255, 0.3)', // 卡片背景 (毛玻璃)
+                blurIntensity: '24px'           // 毛玻璃模糊強度
+            });
 
+            // 💡 幣別與匯率設定
+            const baseCurrency = ref('JPY');
+            const targetCurrency = ref('TWD');
+            
+            // 💡 天氣資訊 ref (用於 API 查詢結果)
+            const dailyWeather = ref({}); 
+            const currentDayWeather = ref({
+                max_temp: 'N/A', 
+                min_temp: 'N/A', 
+                icon: 'fas fa-sync-alt', 
+                desc: '載入中', 
+                feel: 'N/A' 
+            });
+
+
+            // 💡 將 themeColors 轉換為 CSS 變數供全局使用
+            const cssVars = computed(() => ({
+                '--primary-color': themeColors.value.primaryColor,
+                '--secondary-color': themeColors.value.secondaryColor,
+                '--text-color': themeColors.value.textColor,
+                '--secondary-text-color': themeColors.value.secondaryTextColor,
+                '--card-bg-color': themeColors.value.cardBgColor,
+                '--blur-intensity': themeColors.value.blurIntensity,
+                // 為了讓 Liquid Glass 效果更通用，我們使用 rgba 變數
+                '--card-border-light': hexToRgba(themeColors.value.primaryTextColor, 0.8),
+                '--card-border-dark': hexToRgba(themeColors.value.primaryTextColor, 0.4),
+                // Blur layer 的顏色，使用 cardBgColor 的 rbg 和較低透明度
+                '--blur-color': hexToRgba(themeColors.value.cardBgColor.replace(/rgba\(|\)/g, '').split(',').slice(0, 3).join(','), 0.25)
+            }));
+            
 
             // 核心邏輯 - 直接返回 style 物件，強制覆蓋樣式
             const getAppBgStyle = () => {
@@ -943,11 +1023,20 @@
                 return expenses.value.filter(e => e.paymentMethod === expenseFilter.value);
             });
 
-            // 💡 天氣資訊現在從 dailyWeather ref 中讀取 (固定，不再隨機跳動)
+            // 💡 天氣資訊現在從 currentDayWeather ref 中讀取
             const weatherInfo = computed(() => {
-                if(selectedDate.value === 'todo') return { temp: '-', icon: 'fas fa-question-circle', desc: '行前' };
-                return dailyWeather.value[selectedDate.value] || { temp: '?', icon: 'fas fa-question-circle', desc: '載入中' };
+                if(selectedDate.value === 'todo') return { 
+                    max_temp: 'N/A', 
+                    min_temp: 'N/A', 
+                    icon: 'fas fa-question-circle', 
+                    desc: '行前', 
+                    feel: 'N/A'
+                };
+                
+                // 顯示當日天氣或載入中的狀態
+                return dailyWeather.value[selectedDate.value] || currentDayWeather.value;
             });
+
 
             const modalTitle = computed(() => {
                 if (isEditing.value) return '編輯項目';
@@ -967,6 +1056,10 @@
 
             const selectDate = (date) => {
                 selectedDate.value = date;
+                if (date !== 'todo' && currentTab.value === 'schedule') {
+                     // 每次切換日期時，確保有當日天氣資料 (會從 dailyWeather 中讀取，如果沒有則呼叫 API)
+                     if(!dailyWeather.value[date]) fetchRealtimeWeather();
+                }
                 if (currentTab.value === 'map') updateMapMarkers();
                 if (currentTab.value === 'schedule' && date !== 'todo') initSortable();
             };
@@ -975,12 +1068,16 @@
                 currentTab.value = tab;
                 if (tab === 'map') {
                     nextTick(() => {
-                        if (!mapObj.value) initMap(25.0715, 121.233); 
+                        if (!mapObj.value) initMap(destinationLat.value, destinationLng.value); 
                         else mapObj.value.invalidateSize();
                         updateMapMarkers();
                     });
                 }
-                if (tab === 'schedule' && selectedDate.value !== 'todo') initSortable();
+                if (tab === 'schedule' && selectedDate.value !== 'todo') {
+                    initSortable();
+                    // 確保切換到行程頁時，當日天氣是即時的
+                    if(!dailyWeather.value[selectedDate.value]) fetchRealtimeWeather();
+                }
             };
 
             const initSortable = () => {
@@ -1109,8 +1206,8 @@
             const toggleBought = (item) => { item.bought = !item.bought; saveToLocalStorage(); };
 
             const saveToLocalStorage = () => {
-                // 使用 v20 版本號
-                localStorage.setItem('trip_planner_v20', JSON.stringify({ 
+                // 使用 v31 版本號
+                localStorage.setItem('trip_planner_v31', JSON.stringify({ 
                     settings: { 
                         startDate: startDate.value, 
                         duration: tripDuration.value,
@@ -1119,19 +1216,23 @@
                         customBgColor: customBgColor.value, 
                         customBgImage: customBgImage.value, 
                         tripTitle: tripTitle.value,
+                        destinationCity: destinationCity.value, 
+                        destinationLat: destinationLat.value, // 💡 儲存經緯度
+                        destinationLng: destinationLng.value, // 💡 儲存經緯度
                         baseCurrency: baseCurrency.value, 
-                        targetCurrency: targetCurrency.value
+                        targetCurrency: targetCurrency.value,
+                        themeColors: themeColors.value 
                     }, 
                     itinerary: itineraryData.value, expenses: expenses.value,
                     shop: shoppingList.value, todo: todoList.value, info: infoList.value,
-                    // 💡 儲存每日固定天氣
+                    // 💡 儲存每日天氣 (防止重複查詢和跳動)
                     dailyWeather: dailyWeather.value
                 }));
             };
             
-            // 處理版本兼容性 (這次只載入 v20 版本)
+            // 處理版本兼容性 (這次只載入 v31 版本)
             const loadData = () => {
-                let data = JSON.parse(localStorage.getItem('trip_planner_v20'));
+                let data = JSON.parse(localStorage.getItem('trip_planner_v31'));
                 
                 if (data) {
                     if (data.settings) { 
@@ -1143,8 +1244,16 @@
                         customBgImage.value = data.settings.customBgImage || null; 
                         
                         tripTitle.value = data.settings.tripTitle || '我的旅行計畫';
-                        baseCurrency.value = data.settings.baseCurrency || 'TWD'; 
-                        targetCurrency.value = data.settings.targetCurrency || 'HKD';
+                        destinationCity.value = data.settings.destinationCity || '東京'; 
+                        destinationLat.value = data.settings.destinationLat || 35.6895; // 💡 載入經緯度
+                        destinationLng.value = data.settings.destinationLng || 139.6917; // 💡 載入經緯度
+                        baseCurrency.value = data.settings.baseCurrency || 'JPY'; 
+                        targetCurrency.value = data.settings.targetCurrency || 'TWD';
+                        
+                        // 💡 載入主題色
+                        if (data.settings.themeColors) {
+                            themeColors.value = { ...themeColors.value, ...data.settings.themeColors };
+                        }
                     }
                     itineraryData.value = data.itinerary || [];
                     expenses.value = data.expenses || [];
@@ -1157,13 +1266,7 @@
                      customBgColor.value = '#f0f4f8';
                 }
                 
-                // 💡 確保每個行程日期都有一個固定的天氣
-                tripDates.value.forEach(day => {
-                    if (!dailyWeather.value[day.date]) {
-                        dailyWeather.value[day.date] = generateRandomWeather();
-                    }
-                });
-                
+                // 確保選中當日日期
                 if (tripDates.value.length > 0) {
                     selectedDate.value = tripDates.value[0].date;
                 } else {
@@ -1171,21 +1274,86 @@
                 }
             };
             
-            // 監聽日期或天數變化，重新生成/檢查天氣數據
-            watch([startDate, tripDuration], () => {
-                tripDates.value.forEach(day => {
-                    if (!dailyWeather.value[day.date]) {
-                        dailyWeather.value[day.date] = generateRandomWeather();
-                    }
-                });
-                // 刪除多餘的天氣數據
-                const validDates = tripDates.value.map(d => d.date);
-                for (const date in dailyWeather.value) {
-                    if (!validDates.includes(date)) {
-                        delete dailyWeather.value[date];
-                    }
+            // 💡 串接 Open-Meteo API
+            const fetchRealtimeWeather = async () => {
+                if (selectedDate.value === 'todo') return;
+                
+                const lat = destinationLat.value;
+                const lng = destinationLng.value;
+                const date = selectedDate.value;
+                
+                // 檢查是否有足夠的座標資訊
+                if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) {
+                     currentDayWeather.value = { max_temp: '?', min_temp: '?', icon: 'fas fa-exclamation-triangle', desc: '請設定經緯度', feel: 'N/A' };
+                     dailyWeather.value[date] = currentDayWeather.value;
+                     return;
                 }
-                saveToLocalStorage();
+                
+                // 顯示載入狀態
+                currentDayWeather.value = { max_temp: '...', min_temp: '...', icon: 'fas fa-spinner fa-spin', desc: '載入中...', feel: 'N/A' };
+                
+                try {
+                    // API 文件：https://open-meteo.com/en/docs
+                    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max&timezone=auto&start_date=${date}&end_date=${date}&temperature_unit=celsius`;
+
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data.daily && data.daily.time && data.daily.time[0] === date) {
+                        const wmoCode = data.daily.weather_code[0];
+                        const tempMax = Math.round(data.daily.temperature_2m_max[0]);
+                        const tempMin = Math.round(data.daily.temperature_2m_min[0]);
+                        const apparentMax = Math.round(data.daily.apparent_temperature_max[0]);
+
+                        const weatherData = getWeatherTranslation(wmoCode);
+                        
+                        const result = {
+                            max_temp: tempMax,
+                            min_temp: tempMin,
+                            icon: weatherData.icon,
+                            desc: weatherData.desc,
+                            feel: apparentMax // 使用最高體感溫度
+                        };
+                        
+                        dailyWeather.value[date] = result; // 儲存到每日快取
+                        currentDayWeather.value = result; // 顯示到當前卡片
+                        saveToLocalStorage();
+
+                    } else {
+                        // 如果 API 沒返回當日數據
+                        currentDayWeather.value = { max_temp: 'N/A', min_temp: 'N/A', icon: 'fas fa-times-circle', desc: 'API 無此日期資料', feel: 'N/A' };
+                         dailyWeather.value[date] = currentDayWeather.value;
+                    }
+
+                } catch (error) {
+                    console.error("即時天氣獲取失敗:", error);
+                    currentDayWeather.value = { max_temp: 'N/A', min_temp: 'N/A', icon: 'fas fa-exclamation-circle', desc: '網路錯誤', feel: 'N/A' };
+                    dailyWeather.value[date] = currentDayWeather.value;
+                }
+            };
+
+            
+            // 監聽日期或經緯度變化，重新查詢天氣
+            watch(selectedDate, (newDate) => {
+                 if(newDate !== 'todo') {
+                     // 如果本地沒有當日快取，就發送 API 請求
+                     if(!dailyWeather.value[newDate]) {
+                         fetchRealtimeWeather();
+                     } else {
+                        // 如果有快取，就直接顯示快取
+                        currentDayWeather.value = dailyWeather.value[newDate];
+                     }
+                 }
+            });
+            
+            // 監聽經緯度變化，清空所有天氣快取並重新查詢
+            watch([destinationLat, destinationLng, startDate, tripDuration], () => {
+                dailyWeather.value = {}; // 清空所有快取
+                // 重新檢查並選中當前日期以觸發新的查詢
+                 if (selectedDate.value !== 'todo') {
+                    fetchRealtimeWeather();
+                 }
+                 saveToLocalStorage();
             });
 
 
@@ -1211,12 +1379,12 @@
                     }
                 });
                 if (bounds.length) mapObj.value.fitBounds(bounds, { padding: [50, 50] });
-                else mapObj.value.setView([25.0478, 121.5318], 11);
+                else mapObj.value.setView([destinationLat.value, destinationLng.value], 11); // 若無行程點，地圖中心設為目的地
             };
 
             const exportData = () => {
                 const data = {
-                    version: '2.0',
+                    version: '3.1',
                     exportDate: new Date().toISOString(),
                     settings: { 
                         startDate: startDate.value, 
@@ -1226,8 +1394,12 @@
                         customBgColor: customBgColor.value, 
                         customBgImage: customBgImage.value, 
                         tripTitle: tripTitle.value, 
+                        destinationCity: destinationCity.value, 
+                        destinationLat: destinationLat.value, 
+                        destinationLng: destinationLng.value,
                         baseCurrency: baseCurrency.value, 
-                        targetCurrency: targetCurrency.value 
+                        targetCurrency: targetCurrency.value,
+                        themeColors: themeColors.value 
                     }, 
                     itinerary: itineraryData.value,
                     expenses: expenses.value,
@@ -1240,7 +1412,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `trip_backup_${baseCurrency.value}_to_${targetCurrency.value}_${new Date().toISOString().slice(0,10)}.json`; 
+                a.download = `trip_backup_v31_${baseCurrency.value}_to_${targetCurrency.value}_${new Date().toISOString().slice(0,10)}.json`; 
                 a.click();
                 URL.revokeObjectURL(url);
             };
@@ -1283,8 +1455,16 @@
                                 customBgColor.value = data.settings.customBgColor || '#f0f4f8'; 
                                 customBgImage.value = data.settings.customBgImage || null; 
                                 tripTitle.value = data.settings.tripTitle || '我的旅行計畫';
-                                baseCurrency.value = data.settings.baseCurrency || 'TWD'; 
-                                targetCurrency.value = data.settings.targetCurrency || 'HKD';
+                                destinationCity.value = data.settings.destinationCity || '東京'; 
+                                destinationLat.value = data.settings.destinationLat || 35.6895; // 💡 匯入經緯度
+                                destinationLng.value = data.settings.destinationLng || 139.6917; // 💡 匯入經緯度
+                                baseCurrency.value = data.settings.baseCurrency || 'JPY'; 
+                                targetCurrency.value = data.settings.targetCurrency || 'TWD';
+                                
+                                // 💡 匯入主題色
+                                if (data.settings.themeColors) {
+                                    themeColors.value = { ...themeColors.value, ...data.settings.themeColors };
+                                }
                             }
                             
                             itineraryData.value = data.itinerary || [];
@@ -1325,8 +1505,9 @@
                      return;
                 }
 
-                const button = document.querySelector('button.bg-blue-500');
-                if (button) button.textContent = `獲取中... (${base}/${target})`;
+                // 找到匯率更新按鈕，並顯示載入狀態
+                const updateButton = document.querySelector('.liquid-glass button[style*="background-color"]'); 
+                if (updateButton) updateButton.textContent = `獲取中... (${base}/${target})`;
 
                 fetch(`https://open.er-api.com/v6/latest/${base}`)
                     .then(res => res.json()) 
@@ -1348,7 +1529,7 @@
                         saveToLocalStorage();
                     })
                     .finally(() => {
-                        if (button) button.innerHTML = `<i class="fas fa-sync-alt mr-2"></i>獲取最新實時匯率 (${base}/${target})`;
+                        if (updateButton) updateButton.innerHTML = `<i class="fas fa-sync-alt mr-2"></i>獲取最新實時匯率 (${base}/${target})`;
                     });
             };
             
@@ -1356,6 +1537,11 @@
                 loadData();
                 if(selectedDate.value !== 'todo') initSortable();
                 setTimeout(() => scrollToSelectedDate(), 500); 
+
+                // 初始化時獲取即時天氣
+                if (selectedDate.value !== 'todo') {
+                    fetchRealtimeWeather();
+                }
 
                 if (exchangeRate.value === null) {
                     fetchExchangeRate();
@@ -1366,7 +1552,9 @@
                 dateContainer, currentTab, selectedDate, tripDates, dailyItinerary, expenses, shoppingList, todoList, infoList,
                 exchangeRate, 
                 totalExpenseTarget, totalExpenseBase, totalCashBase, totalCardBase, totalCashTarget, totalCardTarget, totalEpay1Base, totalEpay1Target, totalEpay2Base, totalEpay2Target,
-                expenseFilter, filteredExpenses, weatherInfo,
+                expenseFilter, filteredExpenses, 
+                // 💡 使用計算屬性 weatherInfo
+                weatherInfo,
                 showModal, modalType, modalTitle, newItem,
                 selectDate, switchTab, openModal, saveItem, deleteItem, getCategoryIcon, getCategoryColor,
                 toggleTodo, toggleBought, handleImageUpload, handleBgImageUpload, sortableList, 
@@ -1374,10 +1562,17 @@
                 // 設定相關
                 appBgColor, customBgColor, customBgImage, getAppBgStyle, 
                 tripTitle, 
+                destinationCity, 
+                destinationLat, // 💡 傳回經緯度
+                destinationLng, // 💡 傳回經緯度
                 baseCurrency, 
                 targetCurrency, 
                 getCurrencySymbol, 
-                exportData, importData, saveToLocalStorage, fetchExchangeRate 
+                exportData, importData, saveToLocalStorage, fetchExchangeRate,
+                // 主題色
+                themeColors,
+                cssVars,
+                hexToRgba
             };
         } 
     }).mount('#app');
