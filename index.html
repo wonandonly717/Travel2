@@ -168,7 +168,7 @@
         <div v-if="currentTab === 'Schedule'">
             <h2 class="text-lg font-semibold text-gray-700 mb-3">{{ currentDayLabel }} 行程安排</h2>
             
-            <div class="flight-card p-5 mb-5 rounded-2xl shadow-xl">
+            <div v-if="currentDay === days[1]?.date" class="flight-card p-5 mb-5 rounded-2xl shadow-xl">
                  <div class="flex justify-between items-start mb-3">
                     <h3 class="text-xl font-bold text-gray-800">✈️ 航班資訊</h3>
                     <button class="text-primary hover:text-blue-700 flex items-center text-sm font-medium" 
@@ -344,7 +344,26 @@
         <div v-else-if="currentTab === 'Settings'">
             <h2 class="text-2xl font-semibold mb-6 text-gray-700">⚙️ 設定與主題</h2>
             
-             <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
+            <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
+                <h3 class="font-medium mb-3 text-gray-700 flex items-center">📅 旅遊日期設定</h3>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">行程起始日期</label>
+                    <input type="date" v-model="tripStartDate" 
+                           class="w-full p-2 border border-gray-200 rounded-lg focus:ring-primary focus:border-primary">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">總天數 (包含起始日)</label>
+                    <input type="number" v-model.number="totalTripDays" min="1"
+                           class="w-full p-2 border border-gray-200 rounded-lg focus:ring-primary focus:border-primary">
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                    更改日期將會自動更新「行程」頁面中的 Day 1, Day 2... 標籤。
+                </p>
+            </div>
+
+            <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
                 <h3 class="font-medium mb-3 text-gray-700">本次旅行的主要貨幣 (旅遊地貨幣)</h3>
                 <select v-model="tripCurrency" @change="fetchExchangeRate" class="w-full p-2 border border-gray-200 rounded-lg bg-white text-gray-700 focus:ring-primary focus:border-primary">
                     <option value="JPY">JPY - 日幣</option>
@@ -377,7 +396,7 @@
             <hr class="my-6 border-gray-200">
             
             <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
-                <h3 class="font-medium mb-3 text-gray-700 flex items-center">✈️ 航班資訊設定</h3>
+                <h3 class="font-medium mb-3 text-gray-700 flex items-center">✈️ 航班資訊設定 <span class="text-xs ml-2 text-red-500">(模擬網路查詢)</span></h3>
                 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-600 mb-1">航班號碼 (例如：CI100) <span class="text-xs text-red-500">（將強制轉為大寫）</span></label>
@@ -431,7 +450,7 @@
                     </button>
                  </div>
                  <p class="text-xs text-red-500 mt-2">
-                    **注意：** 目前為瀏覽器環境，無法使用真實 GPS 或 API 查詢。此處僅用於模擬顯示該城市天氣。
+                    **注意：** 這是模擬 App 的功能，無法使用真實 GPS 或 API 查詢。
                  </p>
             </div>
 
@@ -691,7 +710,7 @@
 </div>
 
 <script>
-    const { createApp, ref, computed, onMounted } = Vue
+    const { createApp, ref, computed, onMounted, watch } = Vue
 
     createApp({
         setup() {
@@ -727,7 +746,7 @@
             // --- 航班資訊狀態 ---
             const flightInfo = ref({
                 number: 'CI100', // 預設一個航班號碼
-                status: '未更新', 
+                status: '準時', // 初始狀態設為準時
                 departureTime: '08:00', // 表訂時間
                 departureAirport: 'TPE',
                 arrivalTime: '12:00', // 表訂時間
@@ -782,13 +801,21 @@
             ])
 
 
-            // --- Computed 屬性 (維持原樣) ---
+            // --- Computed 屬性 (日期自動更新的核心) ---
             
             const days = computed(() => {
                 const dayList = [{ label: '行前', date: 'PreTrip', dayOfMonth: '' }]; 
-                const startDate = new Date(tripStartDate.value);
                 
-                for (let i = 0; i < totalTripDays.value; i++) {
+                // 檢查日期和天數是否有效
+                const startDate = new Date(tripStartDate.value);
+                const totalDays = parseInt(totalTripDays.value);
+                
+                if (isNaN(startDate.getTime()) || totalDays <= 0) {
+                    // 如果日期無效，僅顯示行前
+                    return dayList;
+                }
+                
+                for (let i = 0; i < totalDays; i++) {
                     const date = new Date(startDate);
                     date.setDate(startDate.getDate() + i);
                     
@@ -798,9 +825,16 @@
                     dayList.push({ label: `Day ${i + 1}`, date: isoDate, dayOfMonth: dayOfMonth });
                 }
                 
-                if (!dayList.find(d => d.date === currentDay.value) && totalTripDays.value > 0) {
+                // 確保 currentDay 在有效範圍內
+                const currentDayExists = dayList.find(d => d.date === currentDay.value);
+                if (!currentDayExists && dayList.length > 1) {
+                     // 如果 currentDay 不在新的日期範圍內，則切換到 Day 1
                      currentDay.value = dayList[1].date; 
+                } else if (!currentDayExists && dayList.length === 1) {
+                     // 如果只有行前，切換到行前
+                     currentDay.value = 'PreTrip'; 
                 }
+                
                 return dayList;
             })
             
@@ -826,6 +860,7 @@
 
             const filteredExpenses = computed(() => {
                  return expenses.value.filter(e => {
+                    // 修正過濾邏輯：如果 days 數組中有該日期才進行過濾
                     const dateMatch = (currentDay.value === 'PreTrip' && e.date === 'PreTrip') || 
                                      (currentDay.value !== 'PreTrip' && e.date === currentDay.value);
                                      
@@ -909,6 +944,7 @@
             
             // 【修正】實時航班追蹤功能
             const fetchFlightStatus = async (isManualUpdate = false) => {
+                // 如果沒有航班號碼，強制設為「未設定」
                 if (!flightInfo.value.number || flightInfo.value.number === '') {
                     flightInfo.value.status = '未設定';
                     return;
@@ -919,8 +955,8 @@
                 // 模擬真實查詢延遲
                 await new Promise(resolve => setTimeout(resolve, 1500)); 
 
-                // 只有手動更新時才模擬狀態變化 (自動更新保持在 "準時" 或上次狀態)
-                let newStatus = flightInfo.value.status === '未更新' ? '準時' : flightInfo.value.status;
+                // 只有手動更新時才模擬狀態變化
+                let newStatus = flightInfo.value.status === '未設定' || flightInfo.value.status === '未更新' ? '準時' : flightInfo.value.status;
                 let newGate = flightInfo.value.gate;
                 let newTerminal = flightInfo.value.terminal;
                 let newArrivalTime = flightInfo.value.arrivalTime;
@@ -1125,19 +1161,28 @@
                 // 首次載入時，更新一次航班狀態以顯示預設時間
                 fetchFlightStatus(true); 
                 
-                // 每 5 分鐘更新一次匯率和航班狀態
+                // 每 5 分鐘更新一次匯率和天氣
                 setInterval(() => {
                     fetchExchangeRate();
-                    fetchWeather(); // 天氣也需要自動更新
+                    fetchWeather();
                 }, 300000); 
                 
                 if (days.value.length > 1) {
                     newExpense.value.date = currentDay.value;
                 }
             });
+            
+            // 監聽日期或天數變化，確保 currentDay 保持在合理範圍
+            watch([tripStartDate, totalTripDays], () => {
+                 // 重新計算 days 即可觸發 computed 屬性中的 currentDay 修正邏輯
+                 days.value; 
+            }, { immediate: true });
+
 
             return {
-                appTitle, currentTab, tripStartDate, totalTripDays, 
+                appTitle, currentTab, 
+                // 【已回歸】日期設定
+                tripStartDate, totalTripDays, 
                 days, currentDay, currentDayLabel,
                 primaryColor, primaryColorInput, appBgColor, updateTheme,
                 // 貨幣與匯率
