@@ -1,15 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ appTitle }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        /* -------------------- START: 自訂字體區塊 -------------------- */
+        /* 定義所有可選用的字體，請確保 './fonts/' 路徑和檔案名稱正確 */
+        
+        /* 1. 陳悅落雁體 */
+        @font-face {
+            font-family: 'ChenYuluoyan';
+            src: url('./fonts/ChenYuluoyan-Thin.ttf') format('truetype'); 
+            font-weight: normal;
+            font-style: normal;
+        }
+        /* 2. Nanum Pen Script 體 */
+        @font-face {
+            font-family: 'NanumPenScript';
+            src: url('./fonts/NanumPenScript-Regular.ttf') format('truetype'); 
+            font-weight: normal;
+            font-style: normal;
+        }
+        /* -------------------- END: 自訂字體區塊 -------------------- */
+
+        body {
+            /* 移除 font-family 設置，讓 Vue 動態綁定來處理 */
+            background: linear-gradient(180deg, #c3e0ff 0%, #ffffff 100%);
+            background-attachment: fixed; 
+        }
+        #app {
+            max-width: 420px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background-color: white; 
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.08); 
+            position: relative;
+        }
+        
+        /* 動態主題顏色變數 (CSS Variable) */
+        :root {
+            --primary-color: #3b82f6; 
+        }
+
+        /* 導航按鈕活動狀態 */
+        .nav-btn.active {
+            color: var(--primary-color); 
+            font-weight: 600;
+        }
+
+        /* 頂部日期 Tab 的樣式 */
+        .day-tab {
+            background-color: white;
+            color: #4b5563; 
+        }
+        .day-tab.active {
+            background-color: var(--primary-color);
+            color: #ffffff; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 應用主題色到關鍵元件 */
+        .main-card-bg {
+             background-color: var(--primary-color);
+             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .accounting-top-card {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 顏色選擇器樣式 */
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            cursor: pointer;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app" 
+     :style="{ 
+         'background': 'linear-gradient(180deg, ' + appBgColor + ' 0%, #ffffff 100%)', 
+         'background-attachment': 'fixed',
+         'font-family': selectedFont 
+     }">
+    <header class="p-4 pt-10 sticky top-0 bg-white bg-opacity-80 backdrop-blur-sm z-20">
+        <div class="flex justify-between items-start">
+            <h1 class="text-2xl font-semibold text-gray-900">{{ appTitle }}</h1>
+            
+            <div class="text-right text-sm text-gray-500">
+                <p>基礎幣別：<span class="font-medium text-gray-800">{{ baseCurrency }}</span></p>
+                <p v-if="exchangeRate" class="font-medium mt-1">
+                    1 JPY ≈ {{ exchangeRate.toFixed(4) }} {{ baseCurrency }}
+                </p>
+                <p v-else class="text-xs text-red-500 mt-1">匯率更新中...</p>
+            </div>
+        </div>
+        
+        <div v-if="currentTab === 'Schedule'" class="bg-gray-50 p-4 mt-4 rounded-xl shadow-inner border border-gray-100 flex justify-between items-center">
+             <div>
+                 <select v-model="weatherLocation" @change="fetchWeather" class="text-xl font-bold bg-transparent focus:ring-0 focus:outline-none text-gray-800">
+                    <option value="Tokyo">日本 東京 (預設)</option>
+                    <option value="Taipei">台灣 台北</option>
+                    <option value="Osaka">日本 大阪</option>
+                </select>
+                <p class="text-sm text-gray-500 mt-1">{{ weather.date }}</p>
+            </div>
+            
+            <div v-if="weather.temp" class="text-right flex items-center">
+                <span class="text-4xl mr-3">{{ weather.icon }}</span>
+                <div>
+                    <p class="text-2xl font-bold text-gray-800">{{ weather.temp }}°C</p>
+                    <p class="text-sm text-gray-500">{{ weather.description }}</p>
+                </div>
+            </div>
+            <p v-else class="text-sm text-red-500">天氣載入失敗</p>
+        </div>
+
+
+        <div class="flex overflow-x-auto py-3 space-x-3 mt-4">
+            <button v-for="day in days" :key="day.date"
+                    @click="currentDay = day.date"
+                    class="day-tab flex-shrink-0 px-4 py-2 rounded-xl text-sm transition duration-200"
+                    :class="{ 'active': currentDay === day.date }"
+            >
+                {{ day.label }}
+                <span v-if="day.date !== 'PreTrip'" class="font-semibold ml-1">{{ day.dayOfMonth }}日</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="p-4 pb-24 min-h-[calc(100vh-160px)]">
+        
+        <div v-if="currentTab === 'Schedule'">
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">{{ currentDayLabel }} 行程安排</h2>
+            <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 mb-4" @click="openModal('Schedule')">
+                <span class="text-sm font-medium text-blue-500 mr-1">+</span>新增行程/活動
+            </button>
+            
+            <div class="main-card-bg p-5 mb-5 rounded-2xl text-white shadow-xl">
+                 <div class="flex justify-between items-start mb-3">
+                    <h3 class="text-xl font-bold">✈️ 航班資訊</h3>
+                    <button class="text-gray-300 hover:text-white" @click="openEditModal('Flight', flightInfo)">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-y-3 gap-x-4 text-sm font-light">
+                    <div>
+                        <p class="font-medium">航班編號</p>
+                        <p class="mt-1 font-semibold">{{ flightInfo.number }}</p>
+                    </div>
+                    <div>
+                        <p class="font-medium">起飛時間</p>
+                        <p class="mt-1 font-semibold">{{ flightInfo.departureTime }} ({{ flightInfo.departureAirport }})</p>
+                    </div>
+                     <div>
+                        <p class="font-medium">抵達時間</p>
+                        <p class="mt-1 font-semibold">{{ flightInfo.arrivalTime }} ({{ flightInfo.arrivalAirport }})</p>
+                    </div>
+                     <div>
+                        <p class="font-medium">Check-in</p>
+                        <p class="mt-1 font-semibold">{{ flightInfo.checkInTime }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-4 mb-4 rounded-2xl flex justify-between items-center shadow-md border border-gray-100">
+                <p>15:00 飯店 Check-in</p>
+                <button class="text-gray-400 hover:text-gray-600" @click="openEditModal('Schedule', {id: 2, name: '飯店 Check-in', date: currentDay})">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                </button>
+            </div>
+        </div>
+        
+        <div v-else-if="currentTab === 'PreTrip'">
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">代辦清單 (Todo List)</h2>
+            <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 mb-4" @click="openModal('PreTrip')">
+                <span class="text-sm font-medium text-blue-500 mr-1">+</span>新增代辦事項
+            </button>
+
+            <div v-for="item in todoList" :key="item.id" class="bg-white p-4 mb-4 rounded-2xl flex justify-between items-center shadow-md border border-gray-100">
+                <div class="flex items-center">
+                    <input type="checkbox" :checked="item.completed" @change="item.completed = !item.completed" 
+                           class="form-checkbox h-5 w-5 rounded-lg border-gray-300 mr-4 focus:ring-current"
+                           :style="{ 'color': primaryColor, 'border-color': primaryColor }"
+                    >
+                    <span class="text-lg text-gray-700" :class="{ 'line-through text-gray-400': item.completed }">
+                        {{ item.name }}
+                    </span>
+                </div>
+                <div class="flex space-x-2">
+                    <button class="text-gray-400 hover:text-gray-600" @click="openEditModal('Todo', item)">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </button>
+                    <button class="text-gray-400 hover:text-red-500" @click="deleteItem('Todo', item.id)">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div v-else-if="currentTab === 'Accounting'">
+            <h2 class="text-lg font-semibold text-gray-700 mb-4">旅費管理</h2>
+            
+            <div class="accounting-top-card p-6 mb-6 rounded-2xl shadow-xl">
+                <p class="text-sm font-light text-gray-200">總支出 ({{ baseCurrency }})</p>
+                <h3 class="text-4xl font-extrabold my-2">{{ baseCurrencySymbol }}{{ totalExpense }}</h3>
+            </div>
+
+            <h3 class="text-md font-semibold text-gray-700 mb-3">支出明細</h3>
+            <div class="flex justify-between items-center mb-4">
+                <div class="p-1 bg-gray-100 rounded-xl flex max-w-xs">
+                    <button class="flex-1 py-2 px-4 rounded-lg text-sm text-gray-600 transition duration-150" 
+                        :class="{'bg-white shadow-md font-medium': expenseFilter === 'all'}" @click="expenseFilter = 'all'">全部</button>
+                    <button class="flex-1 py-2 px-4 rounded-lg text-sm text-gray-600 transition duration-150" 
+                        :class="{'bg-white shadow-md font-medium': expenseFilter === 'cash'}" @click="expenseFilter = 'cash'">現金</button>
+                    <button class="flex-1 py-2 px-4 rounded-lg text-sm text-gray-600 transition duration-150" 
+                        :class="{'bg-white shadow-md font-medium': expenseFilter === 'credit'}" @click="expenseFilter = 'credit'">信用卡</button>
+                </div>
+                <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700" @click="showAccountingModal = true">
+                    <span class="text-sm font-medium text-blue-500 mr-1">+</span>記一筆
+                </button>
+            </div>
+            
+            <p v-if="filteredExpenses.length === 0" class="text-center text-gray-400 mt-10">沒有相關的支出紀錄</p>
+
+            <ul class="space-y-3">
+                <li v-for="expense in filteredExpenses" :key="expense.id" 
+                    @click="openEditModal('Accounting', expense)"
+                    class="bg-white p-4 rounded-xl flex justify-between items-center shadow-sm border border-gray-100 hover:shadow-lg transition cursor-pointer">
+                    <div>
+                        <p class="font-medium text-gray-800">{{ expense.name }}</p>
+                        <p class="text-xs text-gray-400 mt-1">
+                            {{ expense.type === 'cash' ? '💵 現金' : '💳 信用卡' }} 
+                            - {{ expense.currency }} 
+                            <span v-if="expense.currency !== baseCurrency">({{ baseCurrencySymbol }}{{ convertToBaseCurrency(expense.amount, expense.currency).toFixed(0) }})</span>
+                        </p>
+                    </div>
+                    <span class="text-lg font-bold text-red-600">
+                        {{ getCurrencySymbol(expense.currency) }}{{ expense.amount.toFixed(0) }}
+                    </span>
+                </li>
+            </ul>
+
+        </div>
+        
+        <div v-else-if="currentTab === 'Shopping'">
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">購物清單</h2>
+            <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 mb-4" @click="openModal('Shopping')">
+                <span class="text-sm font-medium text-blue-500 mr-1">+</span>新增項目
+            </button>
+
+            <div v-for="item in shoppingList" :key="item.id" class="bg-white p-4 mb-4 rounded-2xl flex justify-between items-center shadow-md border border-gray-100">
+                <div class="flex items-center">
+                    <img :src="item.imgUrl" alt="商品圖片" class="w-16 h-16 object-cover rounded-xl mr-4 border border-gray-100">
+                    <div>
+                        <p class="text-lg font-medium text-gray-800">{{ item.name }}</p>
+                        <p class="text-md text-gray-600 mt-1">¥ {{ item.price }}</p>
+                    </div>
+                </div>
+                 <div class="flex space-x-2">
+                    <button class="text-gray-400 hover:text-gray-600" @click="openEditModal('Shopping', item)">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </button>
+                    <button class="text-gray-400 hover:text-red-500" @click="deleteItem('Shopping', item.id)">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div v-else-if="currentTab === 'Settings'">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-700">⚙️ 設定與主題</h2>
+
+            <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
+                <h3 class="font-medium mb-3 text-gray-700">旅遊日期與天數</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">旅行起始日期 (Day 1)</label>
+                        <input type="date" v-model="tripStartDate" required
+                               class="w-full p-2 border border-gray-200 rounded-lg focus:ring-blue-300 focus:border-blue-300 transition duration-150">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">總旅行天數</label>
+                        <input type="number" v-model.number="totalTripDays" min="1" max="30" required
+                               class="w-full p-2 border border-gray-200 rounded-lg focus:ring-blue-300 focus:border-blue-300 transition duration-150">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
+                <h3 class="font-medium mb-3 text-gray-700">專案名稱/暱稱</h3>
+                <input type="text" v-model="appTitle" placeholder="例如：我的旅程App" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-blue-300 focus:border-blue-300 transition duration-150">
+            </div>
+
+            <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
+                <h3 class="font-medium mb-3 text-gray-700">選擇 App 字體</h3>
+                <select v-model="selectedFont" class="w-full p-2 border border-gray-200 rounded-lg bg-white text-gray-700 focus:ring-current" :style="{ 'border-color': primaryColor }">
+                    <option v-for="font in fontOptions" :key="font.id" :value="font.id">
+                        {{ font.name }}
+                    </option>
+                </select>
+                <p class="text-xs text-gray-500 mt-2">選擇後 App 將即時切換字體。</p>
+            </div>
+
+
+            <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
+                <h3 class="font-medium mb-3 text-gray-700">App 基礎結算貨幣</h3>
+                <select v-model="baseCurrency" @change="fetchExchangeRate" class="w-full p-2 border border-gray-200 rounded-lg bg-white text-gray-700 focus:ring-current" :style="{ 'border-color': primaryColor }">
+                    <option value="TWD">TWD - 新台幣</option>
+                    <option value="USD">USD - 美元</option>
+                    <option value="JPY">JPY - 日幣</option>
+                    <option value="CNY">CNY - 人民幣</option>
+                    <option value="EUR">EUR - 歐元</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-2">更改後，App 將自動嘗試更新匯率並計算總支出。</p>
+            </div>
+
+
+            <div class="bg-white p-4 rounded-xl shadow-md border border-gray-100">
+                <h3 class="font-medium mb-3 text-gray-700">自訂 App 主題顏色</h3>
+                <div class="flex items-center space-x-3">
+                    <input type="color" v-model="primaryColorInput" @input="updateTheme(primaryColorInput)" class="rounded-lg">
+                    <span class="font-mono text-sm text-gray-600">{{ primaryColorInput }}</span>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <nav class="fixed bottom-0 left-0 right-0 max-w-sm mx-auto z-30">
+        <div class="flex justify-around items-center bg-white p-3 mx-4 mb-4 rounded-full shadow-2xl">
+            <button @click="currentTab = 'Schedule'" class="nav-btn flex flex-col items-center p-2" :class="{ 'active': currentTab === 'Schedule' }">
+                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-4 4h.01M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span class="text-xs mt-1">行程</span></button>
+            <button @click="currentTab = 'PreTrip'" class="nav-btn flex flex-col items-center p-2" :class="{ 'active': currentTab === 'PreTrip' }">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5h6"></path></svg><span class="text-xs mt-1">代辦</span></button>
+            <button @click="currentTab = 'Accounting'" class="nav-btn flex flex-col items-center p-2" :class="{ 'active': currentTab === 'Accounting' }">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 6v-1m0 1v3m0 0h.01M12 18V9.143a4.99 4.99 0 00-3-1.071M12 18L7.143 18m4.857-0L16.857 18"></path></svg><span class="text-xs mt-1">記帳</span></button>
+            <button @click="currentTab = 'Shopping'" class="nav-btn flex flex-col items-center p-2" :class="{ 'active': currentTab === 'Shopping' }">
+                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg><span class="text-xs mt-1">購物</span></button>
+             <button @click="currentTab = 'Settings'" class="nav-btn flex flex-col items-center p-2" :class="{ 'active': currentTab === 'Settings' }">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span class="text-xs mt-1">設定</span></button>
+        </div>
+    </nav>
+    
+    <div v-if="showAccountingModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-end justify-center z-40" @click.self="showAccountingModal = false">
+        <div class="bg-white w-full max-w-sm rounded-t-3xl p-6 shadow-2xl transform translate-y-0 transition duration-300">
+            <h3 class="text-xl font-medium mb-4 text-gray-800 border-b pb-2">新增支出紀錄 (基礎幣別: {{ baseCurrency }})</h3>
+            
+            <form @submit.prevent="addExpense" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">金額</label>
+                    <div class="flex">
+                         <select v-model="newExpense.currency" required class="p-3 border border-gray-300 rounded-l-lg bg-gray-50 text-gray-700">
+                            <option value="TWD">TWD</option>
+                            <option value="USD">USD</option>
+                            <option value="JPY">JPY</option>
+                            <option value="CNY">CNY</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+                        <input type="number" step="1" v-model.number="newExpense.amount" required
+                           class="flex-1 p-3 border border-gray-300 rounded-r-lg text-lg focus:ring-current focus:border-current"
+                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }"
+                           placeholder="100">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">用途描述</label>
+                    <input type="text" v-model="newExpense.name" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current"
+                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }"
+                           placeholder="例如：晚餐、計程車">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">支付方式</label>
+                        <select v-model="newExpense.type" required class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-700">
+                            <option value="cash">💵 現金</option>
+                            <option value="credit">💳 信用卡</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">所屬日期</label>
+                        <select v-model="newExpense.date" required class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-700">
+                             <option v-for="day in days" :key="day.date" :value="day.date">
+                                {{ day.label }} 
+                                <span v-if="day.date !== 'PreTrip'">({{ day.dayOfMonth }}日)</span>
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6"
+                        :style="{ 'background-color': primaryColor, 'hover-background-color': primaryColor }">
+                    儲存紀錄
+                </button>
+            </form>
+
+            <button class="mt-4 w-full py-2 text-gray-500 rounded-lg border border-gray-200 hover:bg-gray-50" @click="showAccountingModal = false">
+                取消
+            </button>
+        </div>
+    </div>
+
+     <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-end justify-center z-40" @click.self="showEditModal = false">
+        <div class="bg-white w-full max-w-sm rounded-t-3xl p-6 shadow-2xl transform translate-y-0 transition duration-300">
+            <h3 class="text-xl font-medium mb-4 text-gray-800 border-b pb-2">編輯 {{ editingItem.typeLabel }}</h3>
+            
+            <form @submit.prevent="saveEdit" class="space-y-4">
+                
+                <div v-if="editingItem.type !== 'Accounting' && editingItem.type !== 'Flight'">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">{{ editingItem.typeLabel }} 名稱</label>
+                    <input type="text" v-model="editingItem.data.name" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current"
+                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }">
+                </div>
+
+                <div v-if="editingItem.type === 'Accounting'">
+                     <label class="block text-sm font-medium text-gray-600 mb-1">金額</label>
+                    <div class="flex">
+                        <select v-model="editingItem.data.currency" required class="p-3 border border-gray-300 rounded-l-lg bg-gray-50 text-gray-700">
+                            <option value="TWD">TWD</option>
+                            <option value="USD">USD</option>
+                            <option value="JPY">JPY</option>
+                            <option value="CNY">CNY</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+                        <input type="number" step="1" v-model.number="editingItem.data.amount" required
+                           class="flex-1 p-3 border border-gray-300 rounded-r-lg text-lg focus:ring-current focus:border-current"
+                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">支付方式</label>
+                            <select v-model="editingItem.data.type" required class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-700">
+                                <option value="cash">💵 現金</option>
+                                <option value="credit">💳 信用卡</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">所屬日期</label>
+                            <select v-model="editingItem.data.date" required class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-700">
+                                <option v-for="day in days" :key="day.date" :value="day.date">
+                                    {{ day.label }} 
+                                    <span v-if="day.date !== 'PreTrip'">({{ day.dayOfMonth }}日)</span>
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                 <div v-if="editingItem.type === 'Flight'" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">航班編號</label>
+                        <input type="text" v-model="editingItem.data.number" class="w-full p-3 border border-gray-300 rounded-lg">
+                    </div>
+                     <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">起飛機場代號</label>
+                        <input type="text" v-model="editingItem.data.departureAirport" class="w-full p-3 border border-gray-300 rounded-lg">
+                    </div>
+                     <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">抵達機場代號</label>
+                        <input type="text" v-model="editingItem.data.arrivalAirport" class="w-full p-3 border border-gray-300 rounded-lg">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">起飛時間 (24H)</label>
+                            <input type="time" v-model="editingItem.data.departureTime" class="w-full p-3 border border-gray-300 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">抵達時間 (24H)</label>
+                            <input type="time" v-model="editingItem.data.arrivalTime" class="w-full p-3 border border-gray-300 rounded-lg">
+                        </div>
+                    </div>
+                     <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">建議 Check-in 時間</label>
+                        <input type="time" v-model="editingItem.data.checkInTime" class="w-full p-3 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6"
+                        :style="{ 'background-color': primaryColor, 'hover-background-color': primaryColor }">
+                    確認修改
+                </button>
+            </form>
+
+            <button v-if="editingItem.type !== 'Flight'" class="mt-4 w-full py-2 text-red-500 rounded-lg border border-gray-200 hover:bg-gray-50" 
+                    @click="deleteAndCloseEditModal(editingItem.type, editingItem.data.id)">
+                刪除此項目
+            </button>
+        </div>
+    </div>
+
+</div>
+
 <script>
     const { createApp, ref, computed, onMounted } = Vue
 
     createApp({
         setup() {
             // 基礎狀態
-            const appTitle = ref('我的日本之旅')
+            const appTitle = ref('我的旅遊 App') // 預設名稱已修改
             const currentTab = ref('Schedule') 
             
-            // --- 旅遊日期設定 (新增) ---
+            // --- 字體選擇狀態與列表 (新增) ---
+            const fontOptions = ref([
+                { id: 'sans-serif', name: '系統預設字體' },
+                { id: 'ChenYuluoyan', name: '陳悅落雁體 (Thin)' }, 
+                { id: 'NanumPenScript', name: 'Nanum Pen Script (手寫體)' } 
+            ]);
+            const selectedFont = ref('ChenYuluoyan'); // 預設使用陳悅落雁體
+            // -----------------------------------
+
+            // --- 旅遊日期設定 (修復/調整) ---
             const tripStartDate = ref('2025-12-08'); 
             const totalTripDays = ref(4);
+            const currentDay = ref(tripStartDate.value); // 確保 currentDay 初始值與 tripStartDate 同步
 
             // --- 貨幣和匯率狀態 ---
             const baseCurrency = ref('TWD') 
@@ -46,7 +569,7 @@
                 name: '',
                 type: 'cash',
                 currency: 'JPY', 
-                date: '2025-12-08' // 使用 ISO 日期格式作為 ID
+                date: '2025-12-08' 
             })
             
             // 主題顏色狀態
@@ -54,7 +577,7 @@
             const primaryColor = ref('#3b82f6')
             const appBgColor = ref('#c3e0ff')
             
-            // 記帳數據 (調整為使用 ISO 日期格式作為 'date')
+            // 記帳數據 
             const expenses = ref([
                 { id: 101, name: '午餐：拉麵', amount: 1500, currency: 'JPY', type: 'cash', date: '2025-12-08' },
                 { id: 102, name: '地鐵票', amount: 400, currency: 'JPY', type: 'credit', date: '2025-12-08' },
@@ -73,9 +596,6 @@
             const shoppingList = ref([
                 { id: 201, name: 'CEZANNE 101號唇膏', price: 3000, imgUrl: 'https://via.placeholder.com/150/f9fafb/555555?text=Lipstick', purchased: false },
             ])
-
-            // 確保 currentDay 初始值與 tripStartDate 同步，避免第一次載入時為舊的日期
-            const currentDay = ref(tripStartDate.value);
 
             // --- Computed 屬性 ---
             
@@ -98,7 +618,7 @@
                     });
                 }
                 
-                // 檢查 currentDay 是否有效 (這次修改移除了可能會造成循環依賴的外部設置)
+                // 檢查 currentDay 是否有效
                 if (!dayList.find(d => d.date === currentDay.value) && totalTripDays.value > 0) {
                      currentDay.value = dayList[1].date; // 預設跳到 Day 1
                 }
@@ -112,7 +632,7 @@
             
             const baseCurrencySymbol = computed(() => getCurrencySymbol(baseCurrency.value));
 
-            // 匯率轉換邏輯
+            // 匯率轉換邏輯 
             const convertToBaseCurrency = (amount, currency) => {
                 if (currency === baseCurrency.value) {
                     return amount;
@@ -314,7 +834,7 @@
                 fetchExchangeRate(); 
                 fetchWeather();
                 
-                // 【修復】原本有問題的程式碼移到這裡，確保 Vue 已初始化
+                // 修復：確保 newExpense 的預設日期跟 Day 1 走
                 if (currentTab.value === 'Accounting' && days.value.length > 1) {
                     newExpense.value.date = currentDay.value;
                 }
@@ -324,6 +844,8 @@
                 appTitle, currentTab, tripStartDate, totalTripDays, 
                 days, currentDay, currentDayLabel,
                 primaryColor, primaryColorInput, appBgColor, updateTheme,
+                // 【回傳新增的字體狀態】
+                fontOptions, selectedFont, 
                 // 貨幣與匯率
                 baseCurrency, exchangeRate, baseCurrencySymbol, getCurrencySymbol, fetchExchangeRate, convertToBaseCurrency,
                 // 天氣
@@ -341,3 +863,6 @@
         }
     }).mount('#app')
 </script>
+
+</body>
+</html>
