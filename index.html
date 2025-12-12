@@ -41,11 +41,11 @@
             background-position: center center;
         }
 
-        /* 顏色樣式 - **重點修正：切換到顏色時，必須清除 background-image** */
-        .app-bg.bg-pink { background-color: #F8E7E7; background-image: none; } /* 櫻花粉 */
-        .app-bg.bg-blue { background-color: #E7F0F8; background-image: none; } /* 晴空藍 */
-        .app-bg.bg-green { background-color: #E7F8E7; background-image: none; } /* 抹茶綠 */
-        .app-bg.bg-beige { background-color: #F8F8E7; background-image: none; } /* 和風米 */
+        /* 自訂顏色樣式 - 使用 CSS 變數來設定顏色 */
+        .app-bg.bg-custom-color { 
+            background-color: var(--custom-bg-color); /* 👈 關鍵：使用變數 */
+            background-image: none; 
+        } 
 
         /* 2. 中間層：毛玻璃遮罩 (獨立出來，不再包裹內容) */
         .app-blur-layer {
@@ -135,12 +135,31 @@
             max-width: 420px;
             margin: 0 auto;
         }
+        
+        /* 顏色選擇器隱藏樣式 */
+        .color-picker-wrapper {
+             /* 為了讓 input[type=color] 顯示為圓形，並隱藏瀏覽器預設邊框 */
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+        .color-picker-wrapper input[type="color"] {
+            padding: 0;
+            border: none;
+            width: 200%;
+            height: 200%;
+            transform: translate(-25%, -25%);
+            cursor: pointer;
+        }
     </style>
 </head>
-<body>
-
+<body :style="{'--custom-bg-color': customBgColor}">
 <div id="app">
-    <div class="app-bg" :class="'bg-' + appBgColor"></div> 
+    <div class="app-bg" :class="appBgColor === 'default' ? 'bg-default' : 'bg-custom-color'"></div> 
     <div class="app-blur-layer"></div>
     
     <div id="scroll-container">
@@ -294,7 +313,7 @@
                                 </div>
                                 
                                 <div class="flex items-center mt-1 mb-2">
-                                    <a :href="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.location + ' ' + item.address)" target="_blank"
+                                    <a :href="'https://www.google.com/maps/search/?api=1&query=`。' + encodeURIComponent(item.location + ' ' + item.address)" target="_blank"
                                        class="text-[10px] bg-blue-50/80 text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-100 transition flex items-center gap-1 font-bold backdrop-blur-sm">
                                         <i class="fas fa-location-arrow"></i> 導航
                                     </a>
@@ -502,17 +521,31 @@
 
                 <div class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50 space-y-4">
                     <h3 class="font-bold text-slate-800 border-l-4 border-slate-500 pl-3">應用程式外觀</h3>
-                    <div class="grid grid-cols-5 gap-3">
-                        <div v-for="color in bgColors" :key="color.value" @click="appBgColor = color.value; saveToLocalStorage()"
-                             class="aspect-square rounded-xl cursor-pointer shadow-md transition-all flex items-center justify-center"
-                             :class="[color.class, appBgColor === color.value ? 'ring-4 ring-offset-2 ring-blue-400' : 'hover:opacity-80']"
-                             :title="color.name">
-                            <i v-if="appBgColor === color.value" class="fas fa-check text-white text-xl drop-shadow-lg"></i>
+                    <div class="flex gap-4 items-center">
+                        <button @click="appBgColor = 'default'; customBgColor='#ffffff'; saveToLocalStorage()"
+                             class="aspect-square w-16 h-16 rounded-xl cursor-pointer shadow-md transition-all flex flex-col items-center justify-center bg-cover bg-center text-white"
+                             style="background-image: url('https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?q=80&w=64');"
+                             :class="appBgColor === 'default' ? 'ring-4 ring-offset-2 ring-blue-400' : 'opacity-80 hover:opacity-100'">
+                             <i v-if="appBgColor === 'default'" class="fas fa-check text-xl drop-shadow-lg bg-black/50 p-1 rounded-full"></i>
+                             <span class="text-xs font-bold bg-black/50 px-1 rounded-sm mt-1">圖片</span>
+                        </button>
+
+                        <div class="flex-1 flex flex-col items-center justify-center">
+                            <label class="flex flex-col items-center cursor-pointer transition-all"
+                                   :class="appBgColor === 'custom_color' ? 'ring-4 ring-offset-2 ring-blue-400 p-2 rounded-2xl' : 'p-2 rounded-2xl hover:bg-slate-50'"
+                                   :style="{backgroundColor: customBgColor, borderColor: customBgColor}"
+                                   @click="appBgColor = 'custom_color'; saveToLocalStorage()">
+                                <div class="color-picker-wrapper">
+                                    <input type="color" v-model="customBgColor" @change="appBgColor = 'custom_color'; saveToLocalStorage()" title="選擇背景顏色">
+                                </div>
+                                <span class="text-[10px] font-bold mt-1 text-slate-700">自訂顏色</span>
+                            </label>
                         </div>
                     </div>
+
                     <p class="text-xs text-slate-500 font-bold bg-white/50 p-3 rounded-xl">
                         <i class="fas fa-palette mr-1 text-purple-400"></i>
-                        請選擇背景主題顏色，預設 (Default) 為城市圖片。
+                        請選擇背景主題：預設 (圖片) 或 自訂顏色。
                     </p>
                 </div>
 
@@ -762,14 +795,14 @@
             const baseCurrency = ref('TWD');
             const targetCurrency = ref('HKD');
             
-            // 背景顏色狀態
-            const appBgColor = ref('default'); 
+            // 💡 關鍵變更 3: 自訂背景顏色變數
+            const appBgColor = ref('default'); // 預設為圖片 'default' 或 'custom_color'
+            const customBgColor = ref('#f0f4f8'); // 自訂背景顏色值 (預設為淺色)
+            
+            // 💡 關鍵變更 4: 移除固定顏色陣列
             const bgColors = [
                 { name: '預設圖片', value: 'default', class: 'bg-slate-700/80 bg-cover bg-center text-white' },
-                { name: '櫻花粉', value: 'pink', class: 'bg-pink-100/90' },
-                { name: '晴空藍', value: 'blue', class: 'bg-blue-100/90' },
-                { name: '抹茶綠', value: 'green', class: 'bg-green-100/90' },
-                { name: '和風米', value: 'beige', class: 'bg-yellow-100/90' },
+                { name: '自訂顏色', value: 'custom_color', class: 'bg-white/80' },
             ];
             
             // 幣別符號對應表
@@ -828,7 +861,7 @@
             const infoList = ref([]);
             let sortableInstance = null;
             const sortableList = ref(null);
-            const dateContainer = ref(null); // 新增 dateContainer 的 ref
+            const dateContainer = ref(null); 
 
             const dailyItinerary = computed(() => itineraryData.value.filter(item => item.date === selectedDate.value));
             
@@ -851,7 +884,6 @@
             const totalEpay2Base = computed(() => calculateBaseTotal(expenses.value.filter(e => e.paymentMethod === 'epay2')));
             const totalEpay2Target = computed(() => calculateTarget(totalEpay2Base.value));
             
-            // ✅ 修正: 移除不必要的 map，直接使用 expenseFilter.value 進行篩選
             const filteredExpenses = computed(() => {
                 if (expenseFilter.value === 'all') return expenses.value;
                 return expenses.value.filter(e => e.paymentMethod === expenseFilter.value);
@@ -1040,8 +1072,9 @@
                         duration: tripDuration.value,
                         exchangeRate: exchangeRate.value,
                         appBgColor: appBgColor.value, 
+                        customBgColor: customBgColor.value, // 💡 關鍵變更 5: 儲存自訂顏色
                         tripTitle: tripTitle.value,
-                        baseCurrency: baseCurrency.value, // 新增儲存當地幣別
+                        baseCurrency: baseCurrency.value, 
                         targetCurrency: targetCurrency.value
                     }, 
                     itinerary: itineraryData.value, expenses: expenses.value,
@@ -1053,19 +1086,14 @@
             const loadData = () => {
                 let data = JSON.parse(localStorage.getItem('trip_planner_v14'));
                 
-                // 兼容舊版 v13
-                if (!data) data = JSON.parse(localStorage.getItem('tokyo_data_v13'));
-                // 兼容更舊版 v12 (如果有)
-                if (!data) data = JSON.parse(localStorage.getItem('tokyo_data_v12'));
-
                 if (data) {
                     if (data.settings) { 
                         startDate.value = data.settings.startDate || today;
                         tripDuration.value = data.settings.duration || 5;
                         exchangeRate.value = data.settings.exchangeRate === undefined ? null : data.settings.exchangeRate; 
                         appBgColor.value = data.settings.appBgColor || 'default';
+                        customBgColor.value = data.settings.customBgColor || '#f0f4f8'; // 💡 關鍵變更 6: 載入自訂顏色
                         
-                        // 載入幣別和標題，舊版沒有 baseCurrency 會預設為 TWD
                         tripTitle.value = data.settings.tripTitle || '我的旅行計畫';
                         baseCurrency.value = data.settings.baseCurrency || 'TWD'; 
                         targetCurrency.value = data.settings.targetCurrency || 'HKD';
@@ -1075,7 +1103,11 @@
                     shoppingList.value = data.shop || [];
                     todoList.value = data.todo || [];
                     infoList.value = data.info || [];
+                } else {
+                     // 如果是第一次使用或找不到資料，初始化 customBgColor
+                     customBgColor.value = '#f0f4f8';
                 }
+                
                 // 檢查並將第一個行程的日期設為 selectedDate
                 if (tripDates.value.length > 0) {
                     selectedDate.value = tripDates.value[0].date;
@@ -1112,15 +1144,16 @@
 
             const exportData = () => {
                 const data = {
-                    version: '1.4', 
+                    version: '1.5', // 💡 關鍵變更 7: 增加版本號
                     exportDate: new Date().toISOString(),
                     settings: { 
                         startDate: startDate.value, 
                         duration: tripDuration.value, 
                         exchangeRate: exchangeRate.value, 
                         appBgColor: appBgColor.value,
+                        customBgColor: customBgColor.value, // 匯出自訂顏色
                         tripTitle: tripTitle.value, 
-                        baseCurrency: baseCurrency.value, // 匯出當地幣別
+                        baseCurrency: baseCurrency.value, 
                         targetCurrency: targetCurrency.value 
                     }, 
                     itinerary: itineraryData.value,
@@ -1174,8 +1207,9 @@
                                 tripDuration.value = data.settings.duration || 5;
                                 exchangeRate.value = data.settings.exchangeRate === undefined ? null : data.settings.exchangeRate;
                                 appBgColor.value = data.settings.appBgColor || 'default'; 
+                                customBgColor.value = data.settings.customBgColor || '#f0f4f8'; // 匯入自訂顏色
                                 tripTitle.value = data.settings.tripTitle || '我的旅行計畫';
-                                baseCurrency.value = data.settings.baseCurrency || 'TWD'; // 匯入當地幣別
+                                baseCurrency.value = data.settings.baseCurrency || 'TWD'; 
                                 targetCurrency.value = data.settings.targetCurrency || 'HKD';
                             }
                             
@@ -1267,9 +1301,9 @@
                 toggleTodo, toggleBought, handleImageUpload, sortableList,
                 startDate, tripDuration,
                 // 設定相關
-                appBgColor, bgColors,
+                appBgColor, customBgColor, bgColors, // 💡 關鍵變更 8: 輸出 customBgColor
                 tripTitle, 
-                baseCurrency, // 輸出當地幣別
+                baseCurrency, 
                 targetCurrency, 
                 getCurrencySymbol, 
                 exportData, importData, saveToLocalStorage, fetchExchangeRate 
