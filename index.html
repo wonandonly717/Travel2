@@ -31,17 +31,21 @@
             top: 0; left: 0; right: 0; bottom: 0;
             z-index: -2;
             pointer-events: none;
-            transition: background-color 0.5s ease; /* 新增顏色漸變動畫 */
+            transition: background-color 0.5s ease; 
         }
+        
+        /* 預設圖片樣式 */
         .app-bg.bg-default {
             background-image: url('https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?q=80&w=2070&auto=format&fit=crop');
             background-size: cover;
             background-position: center center;
         }
-        .app-bg.bg-pink { background-color: #F8E7E7; } /* 櫻花粉 */
-        .app-bg.bg-blue { background-color: #E7F0F8; } /* 晴空藍 */
-        .app-bg.bg-green { background-color: #E7F8E7; } /* 抹茶綠 */
-        .app-bg.bg-beige { background-color: #F8F8E7; } /* 和風米 */
+
+        /* 顏色樣式 - **重點修正：切換到顏色時，必須清除 background-image** */
+        .app-bg.bg-pink { background-color: #F8E7E7; background-image: none; } /* 櫻花粉 */
+        .app-bg.bg-blue { background-color: #E7F0F8; background-image: none; } /* 晴空藍 */
+        .app-bg.bg-green { background-color: #E7F8E7; background-image: none; } /* 抹茶綠 */
+        .app-bg.bg-beige { background-color: #F8F8E7; background-image: none; } /* 和風米 */
 
         /* 2. 中間層：毛玻璃遮罩 (獨立出來，不再包裹內容) */
         .app-blur-layer {
@@ -67,8 +71,8 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .bg-jp-blue { background-color: #6B8CB8; }
-        .text-jp-blue { color: #5076a8; }
+        .bg-custom-blue { background-color: #6B8CB8; }
+        .text-custom-blue { color: #5076a8; }
         
         #map { width: 100%; height: 100%; z-index: 1; }
 
@@ -78,78 +82,30 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 
-        .card-bg {
-            background-color: rgba(255, 255, 255, 0.90);
-            backdrop-filter: blur(12px);
-        }
-        
-        .header-bg {
-            background-color: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(10px);
-        }
-
-        .flight-card {
-            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-        .flight-card::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: radial-gradient(circle at top right, rgba(255,255,255,0.2) 0%, transparent 60%);
-            pointer-events: none;
-        }
-        .flight-line {
-            border-top: 2px dashed rgba(255,255,255,0.4);
-        }
-
-        /* 導航欄固定樣式優化 */
-        .bottom-nav {
-            position: fixed;
-            bottom: 32px; /* 距離底部 32px */
-            left: 24px;
-            right: 24px;
-            z-index: 9999; /* 確保在最上層 */
-            max-width: 420px;
-            margin: 0 auto;
-        }
-
-        /* ================= 強化版 Liquid Glass 效果 ================= */
+        /* Liquid Glass 效果 */
         .liquid-glass {
-            /* 1. 背景：改用漸層白，上半部稍微透明一點，下半部實一點，增加立體感 */
             background: linear-gradient(
                 135deg,
                 rgba(255, 255, 255, 0.75) 0%,
                 rgba(255, 255, 255, 0.55) 100%
             );
-            
-            /* 2. 濾鏡：加強模糊和飽和度，讓背後的顏色透出來更鮮豔 */
             backdrop-filter: blur(24px) saturate(200%);
             -webkit-backdrop-filter: blur(24px) saturate(200%);
-            
-            /* 3. 邊框：使用漸層邊框來模擬光線照射 */
             border: 1px solid rgba(255, 255, 255, 0.8);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.4); /* 下緣暗一點 */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
             border-right: 1px solid rgba(255, 255, 255, 0.4);
-            
-            /* 4. 陰影：增加多層陰影，讓它「浮」起來 */
             box-shadow: 
-                0 8px 32px 0 rgba(31, 38, 135, 0.1), /* 主陰影 */
-                inset 0 0 0 1px rgba(255, 255, 255, 0.3), /* 內發光邊緣 */
-                inset 0 10px 20px rgba(255, 255, 255, 0.3); /* 頂部高光 */
-            
+                0 8px 32px 0 rgba(31, 38, 135, 0.1),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+                inset 0 10px 20px rgba(255, 255, 255, 0.3);
             position: relative;
             overflow: hidden;
         }
 
-        /* 模擬強烈流動光澤 (High-light) */
         .liquid-glass::before {
             content: '';
             position: absolute;
             top: 0; left: -100%; width: 50%; height: 100%;
-            /* 更銳利的光澤 */
             background: linear-gradient(
                 to right,
                 rgba(255, 255, 255, 0) 0%,
@@ -158,36 +114,27 @@
             );
             transform: skewX(-25deg);
             pointer-events: none;
-            /* 改為預設就有微弱光澤，不需要 hover 也看得到一點點 */
             opacity: 0.3; 
             transition: left 0.5s;
         }
 
-        /* Hover 時光澤掃過去 */
-        .liquid-glass:hover::before {
-            opacity: 1;
-            left: 200%;
-            transition: left 0.7s ease-in-out; /* 讓光澤真的跑過去，而不是用 animation */
-        }
-
-        /* 讓光澤偶爾閃過，增加生命力 */
-        .liquid-glass:hover::before {
-            opacity: 1;
-            animation: shine 1.5s ease-out;
-        }
-
-        @keyframes shine {
-            0% { transform: translateX(-100%) skewX(-20deg); }
-            100% { transform: translateX(100%) skewX(-20deg); }
-        }
-
-        /* 替換原本的 card-bg (如果不想要那麼強烈的光澤，可以直接用這個基礎版) */
         .card-bg {
             background: rgba(255, 255, 255, 0.75) !important;
             backdrop-filter: blur(16px) saturate(120%) !important;
             border: 1px solid rgba(255, 255, 255, 0.5) !important;
             box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
             }
+
+        /* 導航欄固定樣式優化 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 32px; 
+            left: 24px;
+            right: 24px;
+            z-index: 9999;
+            max-width: 420px;
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body>
@@ -202,13 +149,13 @@
             <div class="px-6 mb-3 flex justify-between items-center">
                 <div>
                     <h1 class="text-xl font-black text-slate-800 tracking-widest flex items-center gap-2 truncate">
-                        {{ tripTitle }} <i class="fas fa-mountain text-blue-400"></i>
+                        {{ tripTitle }}
                     </h1>
                 </div>
                 <div class="text-right">
-                    <div class="text-[10px] text-slate-500 font-bold">目前匯率</div>
-                    <div class="font-bold text-jp-blue text-sm">
-                        1 JPY ≈ {{ exchangeRate ? exchangeRate.toFixed(4) : '未設定' }} {{ getCurrencySymbol(targetCurrency) }}
+                    <div class="text-[10px] text-slate-500 font-bold">目前匯率 ({{ baseCurrency }}/{{ targetCurrency }})</div>
+                    <div class="font-bold text-custom-blue text-sm">
+                        1 {{ getCurrencySymbol(baseCurrency) }} ≈ {{ exchangeRate ? exchangeRate.toFixed(4) : '未設定' }} {{ getCurrencySymbol(targetCurrency) }}
                     </div>
                 </div>
             </div>
@@ -226,7 +173,7 @@
                 <div v-for="(day, index) in tripDates" :key="index" @click="selectDate(day.date)"
                     :id="'date-btn-' + day.date"
                     class="snap-center flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 cursor-pointer border-2"
-                    :class="selectedDate === day.date ? 'bg-jp-blue border-blue-300 text-white shadow-lg shadow-blue-200 scale-105' : 'bg-white/80 border-slate-200 text-slate-400'"
+                    :class="selectedDate === day.date ? 'bg-custom-blue border-blue-300 text-white shadow-lg shadow-blue-200 scale-105' : 'bg-white/80 border-slate-200 text-slate-400'"
                 >
                     <span class="text-[11px] font-bold">{{ day.day }}</span>
                     <span class="text-xl font-black">{{ day.date.split('-')[2] }}</span>
@@ -274,7 +221,7 @@
                     </div>
                     <div class="text-right">
                         <div class="text-xs font-bold bg-sky-100 text-sky-600 px-2 py-1 rounded-full mb-1">
-                            <i class="fas fa-map-marker-alt mr-1"></i>東京
+                            <i class="fas fa-map-marker-alt mr-1"></i>當地城市
                         </div>
                     </div>
                 </div>
@@ -341,7 +288,7 @@
                             <div class="flex-1 min-w-0">
                                 <div class="flex justify-between items-start">
                                     <h3 class="font-bold text-slate-800 text-lg truncate drop-shadow-sm">{{ item.location }}</h3>
-                                    <button @click.stop="openModal('schedule', item)" class="text-slate-400 hover:text-jp-blue px-2 transition-colors">
+                                    <button @click.stop="openModal('schedule', item)" class="text-slate-400 hover:text-custom-blue px-2 transition-colors">
                                         <i class="fas fa-pen text-sm"></i>
                                     </button>
                                 </div>
@@ -388,9 +335,9 @@
                     <div class="mb-4 text-center">
                         <p class="text-xs font-medium opacity-80 mb-1">總支出 ({{ targetCurrency }})</p>
                         <h3 class="text-4xl font-black tracking-tight">
-                            {{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalExpenseHKD.toLocaleString() : '-' }}
+                            {{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalExpenseTarget.toLocaleString() : '-' }}
                         </h3>
-                        <p class="text-xs opacity-70 mt-1">日幣總計 ¥{{ totalExpenseJPY.toLocaleString() || 0 }}</p>
+                        <p class="text-xs opacity-70 mt-1">{{ baseCurrency }} 總計 {{ getCurrencySymbol(baseCurrency) }}{{ totalExpenseBase.toLocaleString() || 0 }}</p>
                     </div>
                     <div class="grid grid-cols-2 gap-4 border-t border-white/20 pt-4 mt-2">
                         <div class="text-center">
@@ -398,29 +345,29 @@
                                 <i class="fas fa-money-bill-wave text-xs"></i>
                                 <span class="text-[10px] font-bold">現金</span>
                             </div>
-                            <div class="font-black text-xl">{{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalCashHKD.toLocaleString() : '-' }}</div>
-                            <div class="text-[10px] opacity-70">¥{{ totalCashJPY.toLocaleString() || 0 }}</div>
+                            <div class="font-black text-xl">{{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalCashTarget.toLocaleString() : '-' }}</div>
+                            <div class="text-[10px] opacity-70">{{ getCurrencySymbol(baseCurrency) }}{{ totalCashBase.toLocaleString() || 0 }}</div>
                         </div>
                         <div class="text-center">
                             <div class="flex items-center justify-center gap-1 text-purple-200 mb-1">
                                 <i class="fas fa-credit-card text-xs"></i> <span class="text-[10px] font-bold">信用卡</span>
                             </div>
-                            <div class="font-black text-lg">{{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalCardHKD.toLocaleString() : '-' }}</div>
-                            <div class="text-[10px] opacity-70">¥{{ totalCardJPY.toLocaleString() || 0 }}</div>
+                            <div class="font-black text-lg">{{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalCardTarget.toLocaleString() : '-' }}</div>
+                            <div class="text-[10px] opacity-70">{{ getCurrencySymbol(baseCurrency) }}{{ totalCardBase.toLocaleString() || 0 }}</div>
                         </div>
                         <div class="text-center">
                             <div class="flex items-center justify-center gap-1 text-blue-200 mb-1">
-                                <i class="fab fa-alipay text-xs"></i> <span class="text-[10px] font-bold">AlipayHK</span>
+                                <i class="fab fa-alipay text-xs"></i> <span class="text-[10px] font-bold">電子支付1</span>
                             </div>
-                            <div class="font-black text-lg">{{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalAlipayHKD.toLocaleString() : '-' }}</div>
-                            <div class="text-[10px] opacity-70">¥{{ totalAlipayJPY.toLocaleString() || 0 }}</div>
+                            <div class="font-black text-lg">{{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalEpay1Target.toLocaleString() : '-' }}</div>
+                            <div class="text-[10px] opacity-70">{{ getCurrencySymbol(baseCurrency) }}{{ totalEpay1Base.toLocaleString() || 0 }}</div>
                         </div>
                       <div class="text-center">
                             <div class="flex items-center justify-center gap-1 text-red-200 mb-1">
-                                <i class="fas fa-qrcode text-xs"></i> <span class="text-[10px] font-bold">PayPay</span>
+                                <i class="fas fa-qrcode text-xs"></i> <span class="text-[10px] font-bold">電子支付2</span>
                             </div>
-                            <div class="font-black text-lg">{{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalPayPayHKD.toLocaleString() : '-' }}</div>
-                            <div class="text-[10px] opacity-70">¥{{ totalPayPayJPY.toLocaleString() || 0 }}</div>
+                            <div class="font-black text-lg">{{ getCurrencySymbol(targetCurrency) }} {{ exchangeRate ? totalEpay2Target.toLocaleString() : '-' }}</div>
+                            <div class="text-[10px] opacity-70">{{ getCurrencySymbol(baseCurrency) }}{{ totalEpay2Base.toLocaleString() || 0 }}</div>
                         </div>
                     </div>
                 </div>
@@ -436,8 +383,8 @@
                             <button @click="expenseFilter = 'all'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'all' ? 'bg-white shadow text-[#5076a8]' : 'text-slate-500'">全部</button>
                             <button @click="expenseFilter = 'cash'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'cash' ? 'bg-white shadow text-green-600' : 'text-slate-500'">現金</button>
                             <button @click="expenseFilter = 'card'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'card' ? 'bg-white shadow text-purple-600' : 'text-slate-500'">信用卡</button>
-                            <button @click="expenseFilter = 'alipay'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'alipay' ? 'bg-white shadow text-blue-600' : 'text-slate-500'">AlipayHK</button>
-                            <button @click="expenseFilter = 'paypay'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'paypay' ? 'bg-white shadow text-red-600' : 'text-slate-500'">PayPay</button>
+                            <button @click="expenseFilter = 'epay1'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'epay1' ? 'bg-white shadow text-blue-600' : 'text-slate-500'">電子支付1</button>
+                            <button @click="expenseFilter = 'epay2'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'epay2' ? 'bg-white shadow text-red-600' : 'text-slate-500'">電子支付2</button>
                         </div>
 
                     </div>
@@ -449,12 +396,12 @@
                                      :class="{
                                         'bg-green-100 text-green-500': exp.paymentMethod === 'cash',
                                         'bg-purple-100 text-purple-500': exp.paymentMethod === 'card',
-                                        'bg-blue-100 text-blue-500': exp.paymentMethod === 'alipay',
-                                        'bg-red-100 text-red-500': exp.paymentMethod === 'paypay'
+                                        'bg-blue-100 text-blue-500': exp.paymentMethod === 'epay1',
+                                        'bg-red-100 text-red-500': exp.paymentMethod === 'epay2'
                                      }">
                                     <i v-if="exp.paymentMethod === 'cash'" class="fas fa-money-bill-wave"></i>
                                     <i v-else-if="exp.paymentMethod === 'card'" class="fas fa-credit-card"></i>
-                                    <i v-else-if="exp.paymentMethod === 'alipay'" class="fab fa-alipay"></i>
+                                    <i v-else-if="exp.paymentMethod === 'epay1'" class="fab fa-alipay"></i>
                                     <i v-else class="fas fa-qrcode"></i>
                                 </div>
                                 <div>
@@ -465,7 +412,7 @@
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="font-bold text-slate-800">-¥{{ exp.amount.toLocaleString() }}</p>
+                                <p class="font-bold text-slate-800">-{{ getCurrencySymbol(baseCurrency) }}{{ exp.amount.toLocaleString() }}</p>
                                 <p class="text-xs text-slate-500 font-medium">
                                     ≈ {{ exchangeRate ? getCurrencySymbol(targetCurrency) + Math.round(exp.amount * exchangeRate).toLocaleString() : '匯率未設' }}
                                 </p>
@@ -501,7 +448,7 @@
 
                         <div>
                             <h3 class="font-bold text-slate-800 text-sm mb-1 line-clamp-2" :class="{'line-through': item.bought}">{{ item.name }}</h3>
-                            <p class="text-xs text-slate-500 font-bold">¥{{ (item.price || 0).toLocaleString() }}</p>
+                             <p class="text-xs text-slate-500 font-bold">{{ getCurrencySymbol(baseCurrency) }}{{ (item.price || 0).toLocaleString() }}</p>
                         </div>
                         
                         <div class="flex justify-between items-end mt-3">
@@ -529,7 +476,7 @@
                         <div class="flex justify-between items-start mb-2">
                             <h3 class="font-bold text-slate-800 text-lg border-l-4 border-purple-300 pl-3">{{ info.title }}</h3>
                             <div class="flex gap-2">
-                                <button @click="openModal('info', info)" class="text-slate-400 hover:text-jp-blue"><i class="fas fa-pen"></i></button>
+                                <button @click="openModal('info', info)" class="text-slate-400 hover:text-custom-blue"><i class="fas fa-pen"></i></button>
                                 <button @click="deleteItem('info', info.id)" class="text-slate-400 hover:text-red-400"><i class="fas fa-times"></i></button>
                             </div>
                         </div>
@@ -545,7 +492,7 @@
                 
                 <div class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50 space-y-4">
                     <h3 class="font-bold text-slate-800 border-l-4 border-slate-500 pl-3">旅程標題</h3>
-                    <input v-model="tripTitle" type="text" @change="saveToLocalStorage" placeholder="例如: 2025 大阪五日遊" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 text-lg">
+                    <input v-model="tripTitle" type="text" @change="saveToLocalStorage" placeholder="例如: 2025 泰國清邁遊" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 text-lg">
                     <p class="text-xs text-slate-500 font-bold bg-white/50 p-3 rounded-xl">
                         <i class="fas fa-tag mr-1 text-blue-400"></i>
                         這個標題會顯示在應用程式上方。
@@ -595,32 +542,47 @@
                 </div>
                 
                  <div class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50 space-y-4">
-                    <h3 class="font-bold text-slate-800 border-l-4 border-slate-500 pl-3">匯率設定 (日幣兌換成...)</h3>
+                    <h3 class="font-bold text-slate-800 border-l-4 border-slate-500 pl-3">匯率設定</h3>
                     
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">目標換算幣別</label>
-                         <select v-model="targetCurrency" @change="saveToLocalStorage(); exchangeRate = null;" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">當地幣別 (旅遊地貨幣)</label>
+                         <select v-model="baseCurrency" @change="saveToLocalStorage(); exchangeRate = null;" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100">
+                            <option value="TWD">TWD (新台幣)</option>
                             <option value="HKD">HKD (港幣)</option>
-                            <option value="TWD">TWD (台幣)</option>
+                            <option value="JPY">JPY (日圓)</option>
+                            <option value="THB">THB (泰銖)</option>
+                            <option value="KRW">KRW (韓元)</option>
                             <option value="USD">USD (美元)</option>
                             <option value="CNY">CNY (人民幣)</option>
-                            <option value="MOP">MOP (澳門幣)</option>
+                            <option value="EUR">EUR (歐元)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">目標換算幣別 (個人記帳幣別)</label>
+                         <select v-model="targetCurrency" @change="saveToLocalStorage(); exchangeRate = null;" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100">
+                            <option value="TWD">TWD (台幣)</option>
+                            <option value="HKD">HKD (港幣)</option>
+                            <option value="USD">USD (美元)</option>
+                            <option value="CNY">CNY (人民幣)</option>
+                            <option value="JPY">JPY (日幣)</option>
+                            <option value="KRW">KRW (韓元)</option>
                             <option value="EUR">EUR (歐元)</option>
                         </select>
                     </div>
 
                     <div class="flex gap-3 items-center">
-                        <div class="text-3xl font-black text-jp-blue">¥1</div>
+                        <div class="text-3xl font-black text-custom-blue">{{ getCurrencySymbol(baseCurrency) }}1</div>
                         <i class="fas fa-arrow-right text-slate-400"></i>
-                        <input v-model.number="exchangeRate" type="number" step="0.0001" @change="saveToLocalStorage" placeholder="例如: 0.051" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 text-lg text-right">
-                        <div class="text-3xl font-black text-slate-800">{{ targetCurrency }}</div>
+                        <input v-model.number="exchangeRate" type="number" step="0.0001" @change="saveToLocalStorage" placeholder="請手動輸入匯率" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 text-lg text-right">
+                        <div class="text-3xl font-black text-slate-800">{{ getCurrencySymbol(targetCurrency) }}</div>
                     </div>
                     <p class="text-xs text-slate-500 font-bold bg-white/50 p-2 rounded-lg">
                         <i class="fas fa-exclamation-triangle mr-1 text-yellow-500"></i>
-                        當前匯率為: 1 JPY ≈ {{ exchangeRate ? exchangeRate.toFixed(4) : '尚未設定' }} {{ targetCurrency }}。
+                        當前匯率為: 1 {{ baseCurrency }} ≈ {{ exchangeRate ? exchangeRate.toFixed(4) : '尚未設定' }} {{ targetCurrency }}。
                     </p>
                     <button @click="fetchExchangeRate" class="w-full py-2 bg-blue-500 text-white rounded-xl font-bold active:scale-95 transition">
-                        <i class="fas fa-sync-alt mr-2"></i>獲取最新實時匯率 (JPY/{{ targetCurrency }})
+                        <i class="fas fa-sync-alt mr-2"></i>獲取最新實時匯率 ({{ baseCurrency }}/{{ targetCurrency }})
                     </button>
                 </div>
 
@@ -642,7 +604,7 @@
                 </div>
                 
                 <div class="text-center text-[10px] text-slate-400 font-bold mt-8">
-                    Tokyo eMenu v1.3 <br>
+                    Travel Planner v1.4 <br>
                 </div>
             </div>
 
@@ -721,14 +683,14 @@
                     <select v-model="newItem.paymentMethod" class="flex-1 bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 font-bold border border-slate-100">
                         <option value="cash">💵 現金</option>
                         <option value="card">💳 信用卡</option>
-                        <option value="alipay">🔵 AlipayHK</option>
-                        <option value="paypay">🔴 PayPay</option>
+                        <option value="epay1">🔵 電子支付1</option>
+                        <option value="epay2">🔴 電子支付2</option>
                     </select>
                     <input v-model="newItem.date" type="text" placeholder="MM-DD" class="w-24 bg-slate-50 rounded-xl p-3 text-slate-700 text-center border border-slate-100">
                 </div>
                 <input v-model="newItem.item" type="text" placeholder="消費項目" class="w-full bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100">
-                <input v-model="newItem.amount" type="number" placeholder="金額 (JPY)" class="w-full bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 text-lg font-bold border border-slate-100">
-                <div class="text-right text-sm text-jp-blue font-bold" v-if="newItem.amount && exchangeRate">
+                 <input v-model="newItem.amount" type="number" :placeholder="'金額 (' + baseCurrency + ')'" class="w-full bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 text-lg font-bold border border-slate-100">
+                <div class="text-right text-sm text-custom-blue font-bold" v-if="newItem.amount && exchangeRate">
                     ≈ {{ (newItem.amount * exchangeRate).toFixed(1) }} {{ targetCurrency }}
                 </div>
                 <div class="text-right text-sm text-yellow-500 font-bold" v-else-if="newItem.amount">
@@ -738,7 +700,7 @@
 
             <div v-if="modalType === 'shop'" class="space-y-3">
                 <input v-model="newItem.name" type="text" placeholder="商品名稱" class="w-full bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100 font-bold">
-                <input v-model="newItem.price" type="number" placeholder="預算 (JPY)" class="w-full bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100 font-bold">
+                 <input v-model="newItem.price" type="number" :placeholder="'預算 (' + baseCurrency + ')'" class="w-full bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100 font-bold">
                 <div class="relative">
                     <i class="fas fa-link absolute left-3 top-3.5 text-slate-400"></i>
                     <input v-model="newItem.image" type="text" placeholder="貼上圖片連結 (URL)" class="w-full bg-slate-50 rounded-xl p-3 pl-9 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100 text-sm">
@@ -796,9 +758,11 @@
             const startDate = ref(today); 
             const tripDuration = ref(5);
             
-            // 新增: 旅程標題
-            const tripTitle = ref('我的日本旅行');
-            // 新增: 目標換算幣別，預設為 HKD
+            // 修正: 旅程標題預設值改為通用
+            const tripTitle = ref('我的旅行計畫');
+            // 新增: 當地幣別 (Base Currency)，預設為 TWD
+            const baseCurrency = ref('TWD');
+            // 目標換算幣別，預設為 HKD
             const targetCurrency = ref('HKD');
             
             // 背景顏色狀態
@@ -813,16 +777,19 @@
             
             // 幣別符號對應表
             const currencySymbols = {
-                HKD: '$',
                 TWD: 'NT$',
+                HKD: '$',
+                JPY: '¥', 
+                THB: '฿', 
+                KRW: '₩',
                 USD: '$',
-                CNY: '¥', // 人民幣通常也用 ¥，但為區分日幣，記帳時我們只在 JPY 前面放 ¥
+                CNY: '¥', 
                 MOP: 'MOP$',
                 EUR: '€',
-                // JPY 不在這裡，因為它只出現在固定位置
             };
 
             const getCurrencySymbol = (currencyCode) => {
+                // 如果找不到符號，則返回幣別代碼本身
                 return currencySymbols[currencyCode] || currencyCode;
             };
 
@@ -848,15 +815,16 @@
                 return dates;
             });
 
-            // 行程資料 (預設資料修正，並新增航班專屬欄位)
+            // 行程資料 (修正: 移除固定 JPY/NRT 的預設資料，改用通用範例)
             const itineraryData = ref([
-                { id: 1, date: today, time: '10:20', category: 'flight', location: 'CX520 航班前往東京', address: 'HKG - NRT', note: '機票已確認', lat: 35.7719, lng: 140.3929, terminal: 'T1', gate: '22', seat: '12A' },
-                { id: 2, date: today, time: '15:00', category: 'transport', location: 'NEX 成田特快', address: '成田空港駅', note: '前往新宿', lat: 35.6895, lng: 139.6917 },
+                { id: 1, date: today, time: '10:20', category: 'flight', location: 'XX航空航班前往當地', address: '出發地 - 目的地', note: '機票已確認', lat: 25.0715, lng: 121.233, terminal: 'T2', gate: 'B1', seat: '12A' },
+                { id: 2, date: today, time: '15:00', category: 'transport', location: '當地交通工具', address: '飯店地址', note: '前往飯店Check-in', lat: 25.0478, lng: 121.5318 },
             ]);
             
+            // 修正: 移除固定 JPY 的預設資料，金額以當地幣別為準
             const expenses = ref([
-                { id: 1, date: new Date().toISOString().slice(5,10), item: 'NEX 車票', amount: 4000, paymentMethod: 'card' },
-                { id: 2, date: new Date().toISOString().slice(5,10), item: '午餐', amount: 1500, paymentMethod: 'cash' },
+                { id: 1, date: new Date().toISOString().slice(5,10), item: '車票', amount: 300, paymentMethod: 'card' },
+                { id: 2, date: new Date().toISOString().slice(5,10), item: '午餐', amount: 500, paymentMethod: 'cash' },
             ]);
             const shoppingList = ref([]);
             const todoList = ref([{ id: 1, text: '購買旅遊保險', done: false }]);
@@ -866,59 +834,54 @@
 
             const dailyItinerary = computed(() => itineraryData.value.filter(item => item.date === selectedDate.value));
             
-            // 記帳計算 (新增 HKD 計算, 加入 || 0 防止 NaN)
-            const calculateHKD = (jpyAmount) => exchangeRate.value ? Math.round(jpyAmount * exchangeRate.value) : 0;
-            const calculateJPYTotal = (list) => list.reduce((sum, item) => sum + (parseInt(item.amount) || 0), 0);
+            // 記帳計算 (統一改為 Base 和 Target 幣別計算)
+            const calculateTarget = (baseAmount) => exchangeRate.value ? Math.round(baseAmount * exchangeRate.value) : 0;
+            const calculateBaseTotal = (list) => list.reduce((sum, item) => sum + (parseInt(item.amount) || 0), 0);
             
-            const totalExpenseJPY = computed(() => calculateJPYTotal(expenses.value));
-            const totalExpenseHKD = computed(() => calculateHKD(totalExpenseJPY.value));
+            const totalExpenseBase = computed(() => calculateBaseTotal(expenses.value));
+            const totalExpenseTarget = computed(() => calculateTarget(totalExpenseBase.value));
             
-            const totalCashJPY = computed(() => calculateJPYTotal(expenses.value.filter(e => e.paymentMethod === 'cash')));
-            const totalCashHKD = computed(() => calculateHKD(totalCashJPY.value));
+            const totalCashBase = computed(() => calculateBaseTotal(expenses.value.filter(e => e.paymentMethod === 'cash')));
+            const totalCashTarget = computed(() => calculateTarget(totalCashBase.value));
             
-            const totalCardJPY = computed(() => calculateJPYTotal(expenses.value.filter(e => e.paymentMethod === 'card')));
-            const totalCardHKD = computed(() => calculateHKD(totalCardJPY.value));
+            const totalCardBase = computed(() => calculateBaseTotal(expenses.value.filter(e => e.paymentMethod === 'card')));
+            const totalCardTarget = computed(() => calculateTarget(totalCardBase.value));
 
-            const totalAlipayJPY = computed(() => calculateJPYTotal(expenses.value.filter(e => e.paymentMethod === 'alipay')));
-            const totalAlipayHKD = computed(() => calculateHKD(totalAlipayJPY.value));
+            const totalEpay1Base = computed(() => calculateBaseTotal(expenses.value.filter(e => e.paymentMethod === 'epay1')));
+            const totalEpay1Target = computed(() => calculateTarget(totalEpay1Base.value));
 
-            const totalPayPayJPY = computed(() => calculateJPYTotal(expenses.value.filter(e => e.paymentMethod === 'paypay')));
-            const totalPayPayHKD = computed(() => calculateHKD(totalPayPayJPY.value));
+            const totalEpay2Base = computed(() => calculateBaseTotal(expenses.value.filter(e => e.paymentMethod === 'epay2')));
+            const totalEpay2Target = computed(() => calculateTarget(totalEpay2Base.value));
             
             const filteredExpenses = computed(() => {
                 if (expenseFilter.value === 'all') return expenses.value;
-                return expenses.value.filter(e => e.paymentMethod === expenseFilter.value);
+                // 修正: 記帳篩選的 paymentMethod 名稱
+                const map = { alipay: 'epay1', paypay: 'epay2' }; 
+                const filterKey = map[expenseFilter.value] || expenseFilter.value;
+                return expenses.value.filter(e => e.paymentMethod === filterKey);
             });
 
-            // 天氣模擬
+            // 天氣模擬 (移除月份判斷，使用更通用的範圍)
             const weatherInfo = computed(() => {
                 if(selectedDate.value === 'todo') return { temp: '-', icon: 'fas fa-question-circle', desc: '?' };
-                const month = parseInt(selectedDate.value.split('-')[1]);
-                let temp = 20;
+                
+                // 隨機生成一個合理的溫度
+                let temp = Math.floor(Math.random() * 20) + 15; // 15C - 34C
                 let icon = 'fas fa-sun';
-                let desc = '晴朗';
-                let feelDiff = -2;
+                let desc = '舒適';
+                let feelDiff = 0;
 
-                if (month === 12 || month <= 2) { 
-                    temp = Math.floor(Math.random() * 8) + 2; 
-                    const conditions = [
-                        { icon: 'fas fa-sun', desc: '晴時多雲' },
-                        { icon: 'fas fa-cloud', desc: '陰天' },
-                        { icon: 'fas fa-snowflake', desc: '小雪' }
-                    ];
-                    const c = conditions[Math.floor(Math.random() * conditions.length)];
-                    icon = c.icon;
-                    desc = c.desc;
-                    feelDiff = -3;
-                } else if (month >= 6 && month <= 9) { 
-                    temp = Math.floor(Math.random() * 10) + 25; 
+                if (temp < 15) { 
+                    icon = 'fas fa-cloud';
+                    desc = '微涼';
+                    feelDiff = -2;
+                } else if (temp > 30) { 
                     icon = 'fas fa-sun';
                     desc = '炎熱';
                     feelDiff = 3;
-                } else { 
-                    temp = Math.floor(Math.random() * 10) + 15; 
-                    icon = 'fas fa-cloud-sun';
-                    desc = '舒適';
+                } else if (Math.random() > 0.7) {
+                    icon = 'fas fa-cloud-showers-heavy';
+                    desc = '有雨';
                 }
 
                 return {
@@ -955,7 +918,8 @@
                 currentTab.value = tab;
                 if (tab === 'map') {
                     nextTick(() => {
-                        if (!mapObj.value) initMap();
+                        // 初始地圖中心點改為通用經緯度 (例如台灣桃園機場附近)
+                        if (!mapObj.value) initMap(25.0715, 121.233); 
                         else mapObj.value.invalidateSize();
                         updateMapMarkers();
                     });
@@ -977,7 +941,7 @@
                                 const otherItems = itineraryData.value.filter(i => i.date !== selectedDate.value);
                                 itineraryData.value = [...otherItems, ...dayItems];
                                 saveToLocalStorage();
-                                updateMapMarkers(); // 排序後地圖也要更新
+                                updateMapMarkers(); 
                             }
                         });
                     }
@@ -988,10 +952,10 @@
                 modalType.value = type;
                 if (item) {
                     isEditing.value = true;
-                    // 使用 structuredClone 進行深拷貝 (更安全的方式)
                     newItem.value = JSON.parse(JSON.stringify(item)); 
                 } else {
                     isEditing.value = false;
+                    // 修正: 記帳預設付款方式名稱
                     if(type === 'money') newItem.value = { paymentMethod: 'cash', date: new Date().toISOString().slice(5,10), amount: null };
                     else if(type === 'schedule') newItem.value = { category: 'sightseeing', time: '12:00', lat: null, lng: null, terminal: '', gate: '', seat: '' };
                     else newItem.value = {};
@@ -1048,7 +1012,6 @@
                 
                 saveToLocalStorage();
                 showModal.value = false;
-                // 不論在哪個 tab 儲存，只要是行程變動，就要更新地圖
                 if (modalType.value === 'schedule') updateMapMarkers(); 
             };
 
@@ -1067,21 +1030,22 @@
                 
                 saveToLocalStorage();
                 
-                if (scheduleChanged) updateMapMarkers(); // 確保刪除行程後地圖立即更新
+                if (scheduleChanged) updateMapMarkers(); 
             };
 
             const toggleTodo = (item) => { item.done = !item.done; saveToLocalStorage(); };
             const toggleBought = (item) => { item.bought = !item.bought; saveToLocalStorage(); };
 
             const saveToLocalStorage = () => {
-                localStorage.setItem('tokyo_data_v13', JSON.stringify({ 
+                // 使用 v14 版本號
+                localStorage.setItem('trip_planner_v14', JSON.stringify({ 
                     settings: { 
                         startDate: startDate.value, 
                         duration: tripDuration.value,
                         exchangeRate: exchangeRate.value,
                         appBgColor: appBgColor.value, 
-                        // 新增儲存 tripTitle 和 targetCurrency
                         tripTitle: tripTitle.value,
+                        baseCurrency: baseCurrency.value, // 新增儲存當地幣別
                         targetCurrency: targetCurrency.value
                     }, 
                     itinerary: itineraryData.value, expenses: expenses.value,
@@ -1089,14 +1053,14 @@
                 }));
             };
             
+            // 處理版本兼容性
             const loadData = () => {
-                // 嘗試載入 v13 的資料
-                let data = JSON.parse(localStorage.getItem('tokyo_data_v13')); 
+                let data = JSON.parse(localStorage.getItem('trip_planner_v14'));
                 
-                // 如果 v13 資料不存在，嘗試載入 v12 (兼容舊版)
-                if (!data) {
-                    data = JSON.parse(localStorage.getItem('tokyo_data_v12')); 
-                }
+                // 兼容舊版 v13
+                if (!data) data = JSON.parse(localStorage.getItem('tokyo_data_v13'));
+                // 兼容更舊版 v12 (如果有)
+                if (!data) data = JSON.parse(localStorage.getItem('tokyo_data_v12'));
 
                 if (data) {
                     if (data.settings) { 
@@ -1105,8 +1069,9 @@
                         exchangeRate.value = data.settings.exchangeRate === undefined ? null : data.settings.exchangeRate; 
                         appBgColor.value = data.settings.appBgColor || 'default';
                         
-                        // 載入新的設定
-                        tripTitle.value = data.settings.tripTitle || '我的日本旅行';
+                        // 載入幣別和標題，舊版沒有 baseCurrency 會預設為 TWD
+                        tripTitle.value = data.settings.tripTitle || '我的旅行計畫';
+                        baseCurrency.value = data.settings.baseCurrency || 'TWD'; 
                         targetCurrency.value = data.settings.targetCurrency || 'HKD';
                     }
                     itineraryData.value = data.itinerary || [];
@@ -1118,11 +1083,13 @@
                 // 檢查並將第一個行程的日期設為 selectedDate
                 if (tripDates.value.length > 0) {
                     selectedDate.value = tripDates.value[0].date;
+                } else {
+                     selectedDate.value = 'todo';
                 }
             };
 
-            const initMap = () => {
-                mapObj.value = L.map('map').setView([35.6895, 139.6917], 11);
+            const initMap = (lat = 25.0478, lng = 121.5318) => { // 預設中心點改為台北市
+                mapObj.value = L.map('map').setView([lat, lng], 11);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                     attribution: '© OpenStreetMap © CARTO', maxZoom: 19
                 }).addTo(mapObj.value);
@@ -1134,7 +1101,6 @@
                 markers.value = [];
                 const bounds = [];
                 dailyItinerary.value.forEach(item => {
-                    // 僅在 lat 和 lng 都是有效數字時才繪製標記
                     if (item.lat && item.lng && !isNaN(item.lat) && !isNaN(item.lng)) {
                         const iconHtml = `<div class="w-8 h-8 rounded-full ${getCategoryColor(item.category)} border-2 border-white flex items-center justify-center text-white shadow-lg"><i class="${getCategoryIcon(item.category)} text-xs"></i></div>`;
                         const icon = L.divIcon({ className: 'custom-pin', html: iconHtml, iconSize: [32, 32], iconAnchor: [16, 32] });
@@ -1143,23 +1109,23 @@
                         bounds.push([item.lat, item.lng]);
                     }
                 });
-                // 如果有標記，則調整地圖視野
                 if (bounds.length) mapObj.value.fitBounds(bounds, { padding: [50, 50] });
-                // 否則，保持在東京 (初始設定)
-                else mapObj.value.setView([35.6895, 139.6917], 11);
+                // 否則，保持在通用中心點
+                else mapObj.value.setView([25.0478, 121.5318], 11);
             };
 
             const exportData = () => {
                 const data = {
-                    version: '1.3', // 更新版本號
+                    version: '1.4', 
                     exportDate: new Date().toISOString(),
                     settings: { 
                         startDate: startDate.value, 
                         duration: tripDuration.value, 
                         exchangeRate: exchangeRate.value, 
                         appBgColor: appBgColor.value,
-                        tripTitle: tripTitle.value, // 匯出標題
-                        targetCurrency: targetCurrency.value // 匯出目標幣別
+                        tripTitle: tripTitle.value, 
+                        baseCurrency: baseCurrency.value, // 匯出當地幣別
+                        targetCurrency: targetCurrency.value 
                     }, 
                     itinerary: itineraryData.value,
                     expenses: expenses.value,
@@ -1171,13 +1137,11 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `trip_backup_${targetCurrency.value}_${new Date().toISOString().slice(0,10)}.json`; // 檔名包含幣別
+                // 檔名包含當地幣別和目標幣別
+                a.download = `trip_backup_${baseCurrency.value}_to_${targetCurrency.value}_${new Date().toISOString().slice(0,10)}.json`; 
                 a.click();
                 URL.revokeObjectURL(url);
             };
-
-            // --- 自動捲動日期邏輯 ---
-            const dateContainer = ref(null);
 
             const scrollToSelectedDate = () => {
                 Vue.nextTick(() => {
@@ -1186,7 +1150,6 @@
                     const targetEl = document.getElementById(targetId);
 
                     if (container && targetEl) {
-                        // 計算置中位置：(目標左邊距 - 容器左邊距) - (容器寬度 / 2) + (目標寬度 / 2)
                         const scrollLeft = targetEl.offsetLeft - container.offsetLeft - (container.clientWidth / 2) + (targetEl.clientWidth / 2);
                         
                         container.scrollTo({
@@ -1197,12 +1160,10 @@
                 });
             };
 
-            // 監聽 selectedDate 變化，當日期改變時自動捲動
             watch(selectedDate, () => {
                 scrollToSelectedDate();
             });
             
-            // 匯入資料 (讀取 JSON)
             const importData = (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
@@ -1212,17 +1173,16 @@
                         const data = JSON.parse(e.target.result);
                         if (confirm('匯入將會覆蓋現有所有資料，確定要繼續嗎？')) {
                             
-                            // 還原設定
                             if (data.settings) {
                                 startDate.value = data.settings.startDate || today;
                                 tripDuration.value = data.settings.duration || 5;
                                 exchangeRate.value = data.settings.exchangeRate === undefined ? null : data.settings.exchangeRate;
                                 appBgColor.value = data.settings.appBgColor || 'default'; 
-                                // 讀取新的設定
-                                tripTitle.value = data.settings.tripTitle || '我的日本旅行';
+                                tripTitle.value = data.settings.tripTitle || '我的旅行計畫';
+                                baseCurrency.value = data.settings.baseCurrency || 'TWD'; // 匯入當地幣別
                                 targetCurrency.value = data.settings.targetCurrency || 'HKD';
                             }
-                            // 還原資料
+                            
                             itineraryData.value = data.itinerary || [];
                             expenses.value = data.expenses || [];
                             shoppingList.value = data.shop || [];
@@ -1232,7 +1192,6 @@
                             saveToLocalStorage();
                             alert('資料匯入成功！請重新選擇行程日期。');
                             
-                            // 重新初始化，但避免全面 reload 導致閃爍
                             if (tripDates.value.length > 0) {
                                 selectedDate.value = tripDates.value[0].date;
                             } else {
@@ -1247,39 +1206,47 @@
                     }
                 };
                 reader.readAsText(file);
-                // 清空 input 讓同個檔案可以再選一次
                 event.target.value = '';
             };
 
-            // 獲取最新實時匯率 (修正: 根據 targetCurrency 動態獲取)
+            // 獲取最新實時匯率 (修正: 根據 baseCurrency 和 targetCurrency 動態獲取)
             const fetchExchangeRate = () => {
-                const currency = targetCurrency.value;
-                const button = document.querySelector('button.bg-blue-500');
-                if (button) button.textContent = `獲取中... (JPY/${currency})`;
+                const base = baseCurrency.value;
+                const target = targetCurrency.value;
+                
+                if (base === target) {
+                     exchangeRate.value = 1;
+                     saveToLocalStorage();
+                     alert(`當地幣別與目標幣別相同，匯率設定為 1。`);
+                     return;
+                }
 
-                // 使用 JPY 作為基礎貨幣，取得目標貨幣的兌換率
-                fetch(`https://open.er-api.com/v6/latest/JPY`)
+                const button = document.querySelector('button.bg-blue-500');
+                if (button) button.textContent = `獲取中... (${base}/${target})`;
+
+                // 使用 Base Currency 作為基礎貨幣，取得目標貨幣的兌換率
+                fetch(`https://open.er-api.com/v6/latest/${base}`)
                     .then(res => res.json()) 
                     .then(data => {
-                        if (data && data.rates && data.rates[currency]) {
-                            // rate 是 1 JPY 可以兌換多少目標幣別
-                            exchangeRate.value = data.rates[currency];
+                        if (data && data.rates && data.rates[target]) {
+                            // rate 是 1 Base 可以兌換多少 Target 幣別
+                            exchangeRate.value = data.rates[target];
                             saveToLocalStorage();
-                            alert(`最新匯率獲取成功: 1 JPY ≈ ${data.rates[currency].toFixed(4)} ${currency}`);
+                            alert(`最新匯率獲取成功: 1 ${base} ≈ ${data.rates[target].toFixed(4)} ${target}`);
                         } else {
-                            alert(`無法獲取 JPY/${currency} 匯率，請檢查網路或稍後再試。`);
-                            exchangeRate.value = null; // 獲取失敗就清空
+                            alert(`無法獲取 ${base}/${target} 匯率，請檢查網路或稍後再試。`);
+                            exchangeRate.value = null;
                             saveToLocalStorage();
                         }
                     })
                     .catch(err => {
-                        alert(`網路錯誤，無法獲取 JPY/${currency} 匯率。`);
+                        alert(`網路錯誤，無法獲取 ${base}/${target} 匯率。`);
                         console.error('匯率更新失敗:', err);
-                        exchangeRate.value = null; // 獲取失敗就清空
+                        exchangeRate.value = null;
                         saveToLocalStorage();
                     })
                     .finally(() => {
-                        if (button) button.innerHTML = `<i class="fas fa-sync-alt mr-2"></i>獲取最新實時匯率 (JPY/${currency})`;
+                        if (button) button.innerHTML = `<i class="fas fa-sync-alt mr-2"></i>獲取最新實時匯率 (${base}/${target})`;
                     });
             };
             
@@ -1288,7 +1255,6 @@
                 if(selectedDate.value !== 'todo') initSortable();
                 setTimeout(() => scrollToSelectedDate(), 500); 
 
-                // 只有在匯率尚未設定 (為 null) 時，才自動嘗試獲取一次最新的實時匯率
                 if (exchangeRate.value === null) {
                     fetchExchangeRate();
                 }
@@ -1296,7 +1262,8 @@
 
             return {
                 dateContainer, currentTab, selectedDate, tripDates, dailyItinerary, expenses, shoppingList, todoList, infoList,
-                exchangeRate, totalExpenseHKD, totalExpenseJPY, totalCashJPY, totalCardJPY, totalCashHKD, totalCardHKD, totalAlipayJPY, totalAlipayHKD, totalPayPayJPY, totalPayPayHKD,
+                exchangeRate, 
+                totalExpenseTarget, totalExpenseBase, totalCashBase, totalCardBase, totalCashTarget, totalCardTarget, totalEpay1Base, totalEpay1Target, totalEpay2Base, totalEpay2Target,
                 expenseFilter, filteredExpenses, weatherInfo,
                 showModal, modalType, modalTitle, newItem,
                 selectDate, switchTab, openModal, saveItem, deleteItem, getCategoryIcon, getCategoryColor,
@@ -1304,9 +1271,10 @@
                 startDate, tripDuration,
                 // 設定相關
                 appBgColor, bgColors,
-                tripTitle, // 新增
-                targetCurrency, // 新增
-                getCurrencySymbol, // 新增
+                tripTitle, 
+                baseCurrency, // 輸出當地幣別
+                targetCurrency, 
+                getCurrencySymbol, 
                 exportData, importData, saveToLocalStorage, fetchExchangeRate 
             };
         } 
