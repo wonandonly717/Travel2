@@ -7,27 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
-        /* -------------------- START: 自訂字體區塊 -------------------- */
-        
-        /* 1. 陳悅落雁體 - 這是您的預設字體 */
-        @font-face {
-            font-family: 'ChenYuluoyan';
-            src: url('./fonts/ChenYuluoyan-Thin.ttf') format('truetype'); 
-            font-weight: normal;
-            font-style: normal;
-        }
-        /* 2. Nanum Pen Script 體 */
-        @font-face {
-            font-family: 'NanumPenScript';
-            src: url('./fonts/NanumPenScript-Regular.ttf') format('truetype'); 
-            font-weight: normal;
-            font-style: normal;
-        }
-        /* -------------------- END: 自訂字體區塊 -------------------- */
+        /* -------------------- 移除自訂字體，固定為系統預設 (sans-serif) -------------------- */
 
         body {
+            /* 調整背景漸層，讓底部更亮 */
             background: linear-gradient(180deg, #c3e0ff 0%, #ffffff 100%);
             background-attachment: fixed; 
+            font-family: sans-serif; /* 固定使用系統預設字體 */
         }
         #app {
             max-width: 420px;
@@ -38,7 +24,7 @@
             position: relative;
         }
         
-        /* 動態主題顏色變數 (CSS Variable) */
+        /* 動態主題顏色變數 */
         :root {
             --primary-color: #3b82f6; 
         }
@@ -49,21 +35,24 @@
             font-weight: 600;
         }
 
-        /* 頂部日期 Tab 的樣式 */
+        /* 頂部日期 Tab 的樣式 - 參照您的範本設計 */
         .day-tab {
-            background-color: white;
+            background-color: #ffffff;
             color: #4b5563; 
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
         .day-tab.active {
             background-color: var(--primary-color);
             color: #ffffff; 
+            border-color: var(--primary-color);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        /* 應用主題色到關鍵元件 */
+        /* App 頂部卡片 (記帳/行程) */
         .main-card-bg {
              background-color: var(--primary-color);
-             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
         .accounting-top-card {
             background-color: var(--primary-color);
@@ -72,24 +61,20 @@
         }
         
         /* 飛機移動動畫 (CSS 修正) */
-        @keyframes fly {
-            0% { transform: translateX(0); }
-            50% { transform: translateX(calc(100% - 20px)); }
-            100% { transform: translateX(0); }
-        }
         .flight-progress {
             position: relative;
-            height: 4px;
+            height: 2px;
             background-color: #ffffff50;
+            margin: 0 10px;
         }
         .flight-progress .plane {
             position: absolute;
-            top: -10px;
+            top: -12px;
             font-size: 24px;
             transition: left 1s ease-in-out;
         }
         .flight-progress[data-status="準時"] .plane {
-            left: 10%; 
+            left: 15%; 
         }
         .flight-progress[data-status="延遲 15 分鐘"] .plane {
             left: 50%; 
@@ -105,7 +90,6 @@
             left: 5%;
         }
 
-
     </style>
 </head>
 <body>
@@ -114,7 +98,6 @@
      :style="{ 
          'background': 'linear-gradient(180deg, ' + appBgColor + ' 0%, #ffffff 100%)', 
          'background-attachment': 'fixed',
-         'font-family': selectedFont 
      }">
     <header class="p-4 pt-10 sticky top-0 bg-white bg-opacity-80 backdrop-blur-sm z-20">
         <div class="flex justify-between items-start">
@@ -129,11 +112,9 @@
             </div>
         </div>
         
-        <div v-if="currentTab === 'Schedule'" class="bg-gray-50 p-4 mt-4 rounded-xl shadow-inner border border-gray-100 flex justify-between items-center">
+        <div class="bg-white p-4 mt-4 rounded-xl shadow-md border border-gray-100 flex justify-between items-center">
              <div>
-                 <input type="text" v-model="weatherLocation" @keyup.enter="fetchWeather(weatherLocation)" 
-                        placeholder="輸入城市名稱 (例如: London)"
-                        class="text-xl font-bold bg-transparent focus:ring-0 focus:outline-none text-gray-800 p-0 m-0 w-full">
+                 <p class="text-xl font-bold text-gray-800">{{ weatherLocation }}</p>
                 
                 <p class="text-sm text-gray-500 mt-1">{{ weather.date }} 
                     <span v-if="weather.loading" class="animate-pulse text-blue-500"> 載入中...</span>
@@ -179,52 +160,47 @@
                     </button>
                 </div>
                 
-                <div class="flex items-center mb-5">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/China_Airlines_logo.svg" 
-                         alt="華航" class="w-8 h-8 mr-3 rounded-full bg-white p-1">
-                    <span class="text-xl font-bold">{{ flightInfo.number }}</span>
-                </div>
                 <p class="text-lg font-bold mb-3" :class="{'text-yellow-300': flightInfo.status !== '準時'}">
-                     狀態：{{ flightInfo.status }}
+                     {{ flightInfo.number }} - 狀態：{{ flightInfo.status }}
                 </p>
 
                 <div class="flex items-center justify-between text-sm mb-5 relative">
                     <div class="text-center">
-                        <span class="block text-2xl">🛫</span>
-                        <span class="text-xs">{{ flightInfo.departureAirport }}</span>
+                        <span class="block text-2xl font-bold text-yellow-300">{{ flightInfo.departureAirport }}</span>
+                        <span class="text-xs text-gray-300">出發</span>
                     </div>
 
-                    <div class="flex-1 h-1 mx-3 flight-progress" :data-status="flightInfo.status">
+                    <div class="flex-1 flight-progress" :data-status="flightInfo.status">
                         <span class="plane text-2xl">✈️</span>
                     </div>
 
                     <div class="text-center">
-                        <span class="block text-2xl">🛬</span>
-                        <span class="text-xs">{{ flightInfo.arrivalAirport }}</span>
+                        <span class="block text-2xl font-bold text-yellow-300">{{ flightInfo.arrivalAirport }}</span>
+                        <span class="text-xs text-gray-300">抵達</span>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-4 gap-y-3 gap-x-4 text-sm font-light">
                     <div>
-                        <p class="font-medium">航廈</p>
-                        <p class="mt-1 font-semibold text-yellow-300 text-lg">{{ flightInfo.terminal }}</p>
+                        <p class="font-medium text-gray-300">航廈</p>
+                        <p class="mt-1 font-semibold text-white text-lg">{{ flightInfo.terminal }}</p>
                     </div>
                     <div>
-                        <p class="font-medium">登機門</p>
-                        <p class="mt-1 font-semibold text-yellow-300 text-lg">{{ flightInfo.gate }}</p>
+                        <p class="font-medium text-gray-300">登機門</p>
+                        <p class="mt-1 font-semibold text-white text-lg">{{ flightInfo.gate }}</p>
                     </div>
-                    <div class="col-span-2"> 
-                         <p class="font-medium">起飛時間 (TPE)</p>
-                         <p class="mt-1 font-semibold text-lg">{{ flightInfo.departureTime }}</p>
+                    <div class="col-span-2 text-right"> 
+                         <p class="font-medium text-gray-300">起飛時間</p>
+                         <p class="mt-1 font-semibold text-lg text-white">{{ flightInfo.departureTime }}</p>
                     </div>
                     
                     <div class="col-span-2"> 
-                        <p class="font-medium">抵達時間 (NRT)</p>
-                        <p class="mt-1 font-semibold text-lg">{{ flightInfo.arrivalTime }}</p>
+                        <p class="font-medium text-gray-300">建議 Check-in</p>
+                        <p class="mt-1 font-semibold text-lg text-white">{{ flightInfo.checkInTime }}</p>
                     </div>
-                    <div class="col-span-2"> 
-                        <p class="font-medium">建議 Check-in</p>
-                        <p class="mt-1 font-semibold text-lg">{{ flightInfo.checkInTime }}</p>
+                     <div class="col-span-2 text-right"> 
+                        <p class="font-medium text-gray-300">抵達時間</p>
+                        <p class="mt-1 font-semibold text-lg text-white">{{ flightInfo.arrivalTime }}</p>
                     </div>
                 </div>
             </div>
@@ -298,7 +274,7 @@
             <ul class="space-y-3">
                 <li v-for="expense in filteredExpenses" :key="expense.id" 
                     @click="openEditModal('Accounting', expense)"
-                    class="bg-white p-4 rounded-xl flex justify-between items-center shadow-sm border border-gray-100 hover:shadow-lg transition cursor-pointer">
+                    class="bg-white p-4 rounded-xl flex justify-between items-center shadow-md border border-gray-100 hover:shadow-lg transition cursor-pointer">
                     <div>
                         <p class="font-medium text-gray-800">{{ expense.name }}</p>
                         <p class="text-xs text-gray-400 mt-1">
@@ -364,16 +340,6 @@
                 <input type="text" v-model="appTitle" placeholder="例如：我的旅程App" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-blue-300 focus:border-blue-300 transition duration-150">
             </div>
 
-            <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
-                <h3 class="font-medium mb-3 text-gray-700">選擇 App 字體</h3>
-                <select v-model="selectedFont" class="w-full p-2 border border-gray-200 rounded-lg bg-white text-gray-700 focus:ring-current" :style="{ 'border-color': primaryColor }">
-                    <option v-for="font in fontOptions" :key="font.id" :value="font.id">
-                        {{ font.name }}
-                    </option>
-                </select>
-                <p class="text-xs text-gray-500 mt-2">選擇後 App 將即時切換字體。</p>
-            </div>
-
 
             <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
                 <h3 class="font-medium mb-3 text-gray-700">App 基礎結算貨幣</h3>
@@ -397,7 +363,8 @@
                     <span class="font-mono text-sm text-gray-600">{{ primaryColorInput }}</span>
                 </div>
             </div>
-        </div>
+            
+            </div>
     </main>
     
     <nav class="fixed bottom-0 left-0 right-0 max-w-sm mx-auto z-30">
@@ -565,6 +532,11 @@
             
             <form @submit.prevent="saveEdit" class="space-y-4">
                 
+                <div v-if="editingItem.type === 'Schedule'">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">時間</label>
+                    <input type="time" v-model="editingItem.data.time"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current">
+                </div>
                 <div v-if="editingItem.type !== 'Accounting' && editingItem.type !== 'Flight'">
                     <label class="block text-sm font-medium text-gray-600 mb-1">{{ editingItem.typeLabel }} 名稱</label>
                     <input type="text" v-model="editingItem.data.name" required
@@ -671,16 +643,10 @@
     createApp({
         setup() {
             // 基礎狀態
-            const appTitle = ref('TRAVEL') // 【修正 1】 網頁名稱
+            const appTitle = ref('TRAVEL') // 【最終修正 1】 網頁名稱固定為 TRAVEL
             const currentTab = ref('Schedule') 
             
-            // --- 字體選擇狀態 ---
-            const fontOptions = ref([
-                { id: 'sans-serif', name: '系統預設字體' },
-                { id: 'ChenYuluoyan', name: '陳悅落雁體 (Thin)' }, 
-                { id: 'NanumPenScript', name: 'NanumPenScript (手寫體)' } 
-            ]);
-            const selectedFont = ref('ChenYuluoyan'); // 【修正 2】 預設使用陳悅落雁體
+            // --- 字體功能已移除 ---
             
             // --- 旅遊日期設定 ---
             const tripStartDate = ref('2025-12-08'); 
@@ -693,7 +659,7 @@
             const exchangeRate = ref(0.21) 
 
             // --- 天氣狀態 ---
-            const weatherLocation = ref('Taipei'); 
+            const weatherLocation = ref('Taipei'); // 模擬 GPS/IP 初始位置
             const weather = ref({
                 temp: 28,
                 description: '多雲，偶陣雨',
@@ -702,7 +668,7 @@
                 loading: false
             });
 
-            // --- 航班資訊狀態 (新增航廈/登機門) ---
+            // --- 航班資訊狀態 ---
             const flightInfo = ref({
                 number: 'CI100', 
                 status: '準時', 
@@ -854,46 +820,36 @@
                     }
                 } catch (error) {
                     console.error('獲取匯率失敗:', error);
-                    // 預設匯率 (以 TWD 為基準的模擬匯率，方便本地測試)
+                    // 預設匯率 (以 TWD 為基準的模擬匯率)
                     exchangeRates.value = { 
                         "TWD": 1, "USD": 0.032, "JPY": 4.75, "CNY": 0.23, "EUR": 0.029, 
                         "KRW": 39.5, "GBP": 0.025 
                     }; 
-                    // 如果 baseCurrency 是 TWD，則顯示 JPY 兌換 TWD 的匯率 (1 JPY = 0.21 TWD, 1 TWD = 4.75 JPY)
                     exchangeRate.value = exchangeRates.value['JPY'] || 4.75; 
                 }
             }
             
-            // 獲取天氣資訊 
-            const fetchWeather = async (location = weatherLocation.value) => {
+            // 獲取天氣資訊 (模擬 GPS 定位)
+            const fetchWeather = async () => {
                 weather.value = { 
                     temp: null, 
-                    description: '載入中...', 
-                    icon: '⏳', 
+                    description: '正在定位中...', 
+                    icon: '📡', 
                     date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }),
                     loading: true
                 };
                 
                 await new Promise(resolve => setTimeout(resolve, 800)); 
                 
-                const lowerLocation = location.toLowerCase();
+                // 模擬 GPS 得到結果
+                const locatedCity = 'Taipei'; 
+                weatherLocation.value = locatedCity;
 
-                if (lowerLocation.includes('taipei') || lowerLocation.includes('台北')) {
+                if (locatedCity === 'Taipei') {
                      weather.value = { temp: 28, description: '多雲，偶陣雨', icon: '🌧️', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
-                } else if (lowerLocation.includes('tokyo') || lowerLocation.includes('東京') || lowerLocation.includes('nrt')) {
-                     weather.value = { temp: 20, description: '晴朗，微風', icon: '☀️', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
-                } else if (lowerLocation.includes('seoul') || lowerLocation.includes('首爾')) {
-                     weather.value = { temp: 15, description: '晴朗，乾燥', icon: '🔆', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
-                } else if (lowerLocation.includes('bangkok') || lowerLocation.includes('曼谷')) {
-                     weather.value = { temp: 33, description: '炎熱，有雷陣雨', icon: '⛈️', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
-                } else if (lowerLocation.includes('london') || lowerLocation.includes('倫敦') || lowerLocation.includes('gbp')) {
-                     weather.value = { temp: 12, description: '陰天，霧濛濛', icon: '🌫️', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
-                } else if (lowerLocation.includes('paris') || lowerLocation.includes('巴黎')) {
-                     weather.value = { temp: 18, description: '晴空萬里', icon: '🌞', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
                 } else {
-                     weather.value = { temp: null, description: `未找到 ${location} 的模擬數據`, icon: '❌', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
+                     weather.value = { temp: 20, description: '晴朗，微風', icon: '☀️', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
                 }
-                weatherLocation.value = location; 
             }
             
             // 實時航班追蹤功能 (模擬)
@@ -1052,17 +1008,10 @@
                 }
             }
             
-            const openModal = (tab) => {
-                if (tab === 'Schedule') showScheduleModal.value = true;
-                else if (tab === 'PreTrip') showTodoModal.value = true;
-                else if (tab === 'Accounting') showAccountingModal.value = true;
-                else if (tab === 'Shopping') showShoppingModal.value = true;
-            }
-            
             onMounted(() => {
                 document.documentElement.style.setProperty('--primary-color', primaryColorInput.value);
                 fetchExchangeRate(); 
-                fetchWeather('Taipei'); 
+                fetchWeather(); // 【修正：模擬 GPS 查詢】
                 fetchFlightStatus(); 
 
                 setInterval(() => {
@@ -1079,7 +1028,6 @@
                 appTitle, currentTab, tripStartDate, totalTripDays, 
                 days, currentDay, currentDayLabel,
                 primaryColor, primaryColorInput, appBgColor, updateTheme,
-                fontOptions, selectedFont, 
                 // 貨幣與匯率
                 baseCurrency, exchangeRate, baseCurrencySymbol, getCurrencySymbol, fetchExchangeRate, convertToBaseCurrency,
                 // 天氣
@@ -1096,7 +1044,7 @@
                 // 編輯功能相關
                 showEditModal, editingItem, openEditModal, saveEdit, deleteAndCloseEditModal,
                 // 通用
-                openModal, deleteItem,
+                deleteItem,
             }
         }
     }).mount('#app')
