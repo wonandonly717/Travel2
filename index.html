@@ -27,7 +27,6 @@
         /* -------------------- END: 自訂字體區塊 -------------------- */
 
         body {
-            /* 移除 font-family 設置，讓 Vue 動態綁定來處理 */
             background: linear-gradient(180deg, #c3e0ff 0%, #ffffff 100%);
             background-attachment: fixed; 
         }
@@ -114,12 +113,13 @@
         
         <div v-if="currentTab === 'Schedule'" class="bg-gray-50 p-4 mt-4 rounded-xl shadow-inner border border-gray-100 flex justify-between items-center">
              <div>
-                 <select v-model="weatherLocation" @change="fetchWeather" class="text-xl font-bold bg-transparent focus:ring-0 focus:outline-none text-gray-800">
-                    <option value="Tokyo">日本 東京 (預設)</option>
-                    <option value="Taipei">台灣 台北</option>
-                    <option value="Osaka">日本 大阪</option>
-                </select>
-                <p class="text-sm text-gray-500 mt-1">{{ weather.date }}</p>
+                 <input type="text" v-model="weatherLocation" @keyup.enter="fetchWeather(weatherLocation)" 
+                        placeholder="輸入城市名稱 (例如: London)"
+                        class="text-xl font-bold bg-transparent focus:ring-0 focus:outline-none text-gray-800 p-0 m-0 w-full">
+                
+                <p class="text-sm text-gray-500 mt-1">{{ weather.date }} 
+                    <span v-if="weather.loading" class="animate-pulse text-blue-500"> 載入中...</span>
+                </p>
             </div>
             
             <div v-if="weather.temp" class="text-right flex items-center">
@@ -149,7 +149,7 @@
         
         <div v-if="currentTab === 'Schedule'">
             <h2 class="text-lg font-semibold text-gray-700 mb-3">{{ currentDayLabel }} 行程安排</h2>
-            <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 mb-4" @click="openModal('Schedule')">
+            <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 mb-4" @click="showScheduleModal = true">
                 <span class="text-sm font-medium text-blue-500 mr-1">+</span>新增行程/活動
             </button>
             
@@ -160,6 +160,9 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                     </button>
                 </div>
+                <p class="text-lg font-bold mb-3" :class="{'text-yellow-300': flightInfo.status !== '準時'}">
+                     狀態：{{ flightInfo.status }}
+                </p>
                 <div class="grid grid-cols-2 gap-y-3 gap-x-4 text-sm font-light">
                     <div>
                         <p class="font-medium">航班編號</p>
@@ -190,7 +193,7 @@
         
         <div v-else-if="currentTab === 'PreTrip'">
             <h2 class="text-lg font-semibold text-gray-700 mb-3">代辦清單 (Todo List)</h2>
-            <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 mb-4" @click="openModal('PreTrip')">
+            <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 mb-4" @click="showTodoModal = true">
                 <span class="text-sm font-medium text-blue-500 mr-1">+</span>新增代辦事項
             </button>
 
@@ -262,7 +265,7 @@
         
         <div v-else-if="currentTab === 'Shopping'">
             <h2 class="text-lg font-semibold text-gray-700 mb-3">購物清單</h2>
-            <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 mb-4" @click="openModal('Shopping')">
+            <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 mb-4" @click="showShoppingModal = true">
                 <span class="text-sm font-medium text-blue-500 mr-1">+</span>新增項目
             </button>
 
@@ -419,6 +422,87 @@
         </div>
     </div>
 
+
+    <div v-if="showTodoModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-end justify-center z-40" @click.self="showTodoModal = false">
+        <div class="bg-white w-full max-w-sm rounded-t-3xl p-6 shadow-2xl">
+             <h3 class="text-xl font-medium mb-4 text-gray-800 border-b pb-2">新增行前代辦事項</h3>
+            <form @submit.prevent="addTodoItem" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">代辦事項內容</label>
+                    <input type="text" v-model="newTodo.name" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current"
+                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }"
+                           placeholder="例如：兌換日幣">
+                </div>
+                 <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6"
+                        :style="{ 'background-color': primaryColor, 'hover-background-color': primaryColor }">
+                    新增
+                </button>
+            </form>
+            <button class="mt-4 w-full py-2 text-gray-500 rounded-lg border border-gray-200 hover:bg-gray-50" @click="showTodoModal = false">
+                取消
+            </button>
+        </div>
+    </div>
+
+    <div v-if="showShoppingModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-end justify-center z-40" @click.self="showShoppingModal = false">
+        <div class="bg-white w-full max-w-sm rounded-t-3xl p-6 shadow-2xl">
+             <h3 class="text-xl font-medium mb-4 text-gray-800 border-b pb-2">新增購物清單項目</h3>
+            <form @submit.prevent="addShoppingItem" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">商品名稱</label>
+                    <input type="text" v-model="newShoppingItem.name" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current"
+                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }"
+                           placeholder="例如：東京香蕉">
+                </div>
+                 <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">價格 (JPY)</label>
+                    <input type="number" v-model.number="newShoppingItem.price" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current"
+                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }"
+                           placeholder="1000">
+                </div>
+                 <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6"
+                        :style="{ 'background-color': primaryColor, 'hover-background-color': primaryColor }">
+                    新增
+                </button>
+            </form>
+            <button class="mt-4 w-full py-2 text-gray-500 rounded-lg border border-gray-200 hover:bg-gray-50" @click="showShoppingModal = false">
+                取消
+            </button>
+        </div>
+    </div>
+
+
+    <div v-if="showScheduleModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-end justify-center z-40" @click.self="showScheduleModal = false">
+        <div class="bg-white w-full max-w-sm rounded-t-3xl p-6 shadow-2xl">
+             <h3 class="text-xl font-medium mb-4 text-gray-800 border-b pb-2">新增行程項目 ({{ currentDayLabel }})</h3>
+            <form @submit.prevent="addScheduleItem" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">時間 (選填)</label>
+                    <input type="time" v-model="newScheduleItem.time"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">活動/地點名稱</label>
+                    <input type="text" v-model="newScheduleItem.name" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current"
+                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }"
+                           placeholder="例如：迪士尼樂園">
+                </div>
+                 <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6"
+                        :style="{ 'background-color': primaryColor, 'hover-background-color': primaryColor }">
+                    新增行程
+                </button>
+            </form>
+            <button class="mt-4 w-full py-2 text-gray-500 rounded-lg border border-gray-200 hover:bg-gray-50" @click="showScheduleModal = false">
+                取消
+            </button>
+        </div>
+    </div>
+
+
      <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-end justify-center z-40" @click.self="showEditModal = false">
         <div class="bg-white w-full max-w-sm rounded-t-3xl p-6 shadow-2xl transform translate-y-0 transition duration-300">
             <h3 class="text-xl font-medium mb-4 text-gray-800 border-b pb-2">編輯 {{ editingItem.typeLabel }}</h3>
@@ -517,22 +601,21 @@
     createApp({
         setup() {
             // 基礎狀態
-            const appTitle = ref('我的旅遊 App') // 預設名稱已修改
+            const appTitle = ref('我的旅遊 App') 
             const currentTab = ref('Schedule') 
             
-            // --- 字體選擇狀態與列表 (新增) ---
+            // --- 字體選擇狀態 ---
             const fontOptions = ref([
                 { id: 'sans-serif', name: '系統預設字體' },
                 { id: 'ChenYuluoyan', name: '陳悅落雁體 (Thin)' }, 
-                { id: 'NanumPenScript', name: 'Nanum Pen Script (手寫體)' } 
+                { id: 'NanumPenScript', name: 'NanumPenScript (手寫體)' } 
             ]);
-            const selectedFont = ref('ChenYuluoyan'); // 預設使用陳悅落雁體
-            // -----------------------------------
-
-            // --- 旅遊日期設定 (修復/調整) ---
+            const selectedFont = ref('ChenYuluoyan'); 
+            
+            // --- 旅遊日期設定 ---
             const tripStartDate = ref('2025-12-08'); 
             const totalTripDays = ref(4);
-            const currentDay = ref(tripStartDate.value); // 確保 currentDay 初始值與 tripStartDate 同步
+            const currentDay = ref(tripStartDate.value); 
 
             // --- 貨幣和匯率狀態 ---
             const baseCurrency = ref('TWD') 
@@ -540,18 +623,20 @@
             const exchangeRate = ref(0.21) 
             const apiEndpoint = 'https://api.exchangerate-api.com/v4/latest/JPY'; 
 
-            // --- 天氣狀態 ---
-            const weatherLocation = ref('Tokyo'); 
+            // --- 天氣狀態 (已修改為全球城市支援) ---
+            const weatherLocation = ref('Tokyo'); // 預設城市
             const weather = ref({
                 temp: 20,
                 description: '晴朗，微風',
                 icon: '☀️',
-                date: '12月12日'
+                date: '12月12日',
+                loading: false
             });
 
             // --- 航班資訊狀態 ---
             const flightInfo = ref({
-                number: 'CI100',
+                number: 'CI100', 
+                status: '準時', 
                 departureTime: '09:05',
                 departureAirport: 'TPE',
                 arrivalTime: '13:00',
@@ -559,17 +644,28 @@
                 checkInTime: '07:00'
             });
 
-
-            // --- 記帳模態框狀態 ---
+            // --- 模態框狀態 ---
             const showAccountingModal = ref(false)
+            const showTodoModal = ref(false) // 新增待辦模態框狀態
+            const showShoppingModal = ref(false) // 新增購物模態框狀態
+            const showScheduleModal = ref(false) // 新增行程模態框狀態
             const showEditModal = ref(false)
             const editingItem = ref({ type: '', typeLabel: '', data: null }); 
+            
+            // --- 新增項目表單狀態 ---
             const newExpense = ref({
-                amount: null,
+                amount: null, name: '', type: 'cash', currency: 'JPY', date: '2025-12-08' 
+            })
+            const newTodo = ref({ // 新增待辦事項表單
+                name: ''
+            })
+            const newShoppingItem = ref({ // 新增購物項目表單
                 name: '',
-                type: 'cash',
-                currency: 'JPY', 
-                date: '2025-12-08' 
+                price: null
+            })
+            const newScheduleItem = ref({ // 新增行程項目表單
+                 time: '',
+                 name: ''
             })
             
             // 主題顏色狀態
@@ -577,30 +673,33 @@
             const primaryColor = ref('#3b82f6')
             const appBgColor = ref('#c3e0ff')
             
-            // 記帳數據 
+            // 數據清單
             const expenses = ref([
                 { id: 101, name: '午餐：拉麵', amount: 1500, currency: 'JPY', type: 'cash', date: '2025-12-08' },
-                { id: 102, name: '地鐵票', amount: 400, currency: 'JPY', type: 'credit', date: '2025-12-08' },
-                { id: 103, name: '伴手禮', amount: 500, currency: 'USD', type: 'credit', date: '2025-12-09' },
                 { id: 104, name: '保險', amount: 1000, currency: 'TWD', type: 'credit', date: 'PreTrip' },
             ])
             const expenseFilter = ref('all') 
             
-            // 代辦清單 (Todo List)
             const todoList = ref([
                 { id: 1, name: '購買旅遊保險', completed: false },
                 { id: 2, name: '買網卡/SIM卡', completed: true },
-                { id: 3, name: '兌換日幣現金', completed: false },
             ])
-            // 購物清單數據
+            
             const shoppingList = ref([
                 { id: 201, name: 'CEZANNE 101號唇膏', price: 3000, imgUrl: 'https://via.placeholder.com/150/f9fafb/555555?text=Lipstick', purchased: false },
             ])
-
-            // --- Computed 屬性 ---
             
-            // 動態生成行程天數 Tab
+            const scheduleList = ref([
+                { id: 1, name: '飛機抵達 NRT', time: '13:00', date: '2025-12-08' },
+                { id: 2, name: '飯店 Check-in', time: '15:00', date: '2025-12-08' },
+                { id: 3, name: '晚餐：壽司大', time: '18:30', date: '2025-12-08' },
+            ])
+
+
+            // --- Computed 屬性 (保持不變) ---
+            
             const days = computed(() => {
+                // ... (天數計算邏輯不變) ...
                 const dayList = [{ label: '行前', date: 'PreTrip', dayOfMonth: '' }]; 
                 const startDate = new Date(tripStartDate.value);
                 
@@ -608,21 +707,15 @@
                     const date = new Date(startDate);
                     date.setDate(startDate.getDate() + i);
                     
-                    const isoDate = date.toISOString().split('T')[0]; // YYYY-MM-DD
-                    const dayOfMonth = date.getDate().toString().padStart(2, '0'); // 日
+                    const isoDate = date.toISOString().split('T')[0]; 
+                    const dayOfMonth = date.getDate().toString().padStart(2, '0'); 
                     
-                    dayList.push({
-                        label: `Day ${i + 1}`,
-                        date: isoDate,
-                        dayOfMonth: dayOfMonth 
-                    });
+                    dayList.push({ label: `Day ${i + 1}`, date: isoDate, dayOfMonth: dayOfMonth });
                 }
                 
-                // 檢查 currentDay 是否有效
                 if (!dayList.find(d => d.date === currentDay.value) && totalTripDays.value > 0) {
-                     currentDay.value = dayList[1].date; // 預設跳到 Day 1
+                     currentDay.value = dayList[1].date; 
                 }
-                
                 return dayList;
             })
             
@@ -632,30 +725,19 @@
             
             const baseCurrencySymbol = computed(() => getCurrencySymbol(baseCurrency.value));
 
-            // 匯率轉換邏輯 
             const convertToBaseCurrency = (amount, currency) => {
-                if (currency === baseCurrency.value) {
-                    return amount;
-                }
+                // ... (匯率轉換邏輯不變) ...
+                if (currency === baseCurrency.value) { return amount; }
                 const rateToBase = exchangeRates.value[baseCurrency.value];
                 const rateFrom = exchangeRates.value[currency];
 
-                if (rateFrom && rateToBase) {
-                    return amount * (rateToBase / rateFrom);
-                }
+                if (rateFrom && rateToBase) { return amount * (rateToBase / rateFrom); }
                 
-                // 預設匯率 (作為 fallback)
-                if (currency === 'JPY' && baseCurrency.value === 'TWD') {
-                     return amount * 0.21;
-                }
-                if (currency === 'TWD' && baseCurrency.value === 'JPY') {
-                     return amount / 0.21;
-                }
-
+                if (currency === 'JPY' && baseCurrency.value === 'TWD') { return amount * 0.21; }
+                if (currency === 'TWD' && baseCurrency.value === 'JPY') { return amount / 0.21; }
                 return amount; 
             }
 
-            // 總支出 (略)
             const totalExpense = computed(() => {
                 return expenses.value
                     .filter(e => e.date !== 'PreTrip')
@@ -672,11 +754,20 @@
                     return dateMatch && e.type === expenseFilter.value;
                 });
             })
+            
+            // 根據當前選擇日期篩選行程
+            const filteredSchedule = computed(() => {
+                return scheduleList.value
+                    .filter(item => item.date === currentDay.value)
+                    .sort((a, b) => a.time.localeCompare(b.time)); // 按時間排序
+            })
+
 
             // --- Methods ---
 
-            // 獲取實時匯率 (略)
+            // 獲取實時匯率 (保持不變)
             const fetchExchangeRate = async () => {
+                // ... (匯率獲取邏輯不變) ...
                 exchangeRate.value = null; 
 
                 try {
@@ -693,33 +784,59 @@
                     }
                 } catch (error) {
                     console.error('獲取匯率失敗:', error);
-                    exchangeRates.value = {
-                        "TWD": 0.21, "USD": 0.0067, "JPY": 1, "CNY": 0.048, "EUR": 0.0061
-                    };
+                    exchangeRates.value = { "TWD": 0.21, "USD": 0.0067, "JPY": 1, "CNY": 0.048, "EUR": 0.0061 };
                     exchangeRate.value = exchangeRates.value[baseCurrency.value] || 0.21;
                 }
             }
             
-            // 獲取天氣資訊 (略)
-            const fetchWeather = async () => {
-                const location = weatherLocation.value;
-                weather.value = { temp: null, description: '載入中...', icon: '⏳', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }) };
-                await new Promise(resolve => setTimeout(resolve, 500)); 
+            // 獲取天氣資訊 (已修改為支援任意城市)
+            const fetchWeather = async (location = weatherLocation.value) => {
+                weather.value = { 
+                    temp: null, 
+                    description: '載入中...', 
+                    icon: '⏳', 
+                    date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }),
+                    loading: true // 開始載入
+                };
+                
+                await new Promise(resolve => setTimeout(resolve, 800)); // 模擬 API 延遲
+                
+                // 註：若要實現真正的全球城市查詢，請在此處替換為 OpenWeather 或和風天氣等 API 呼叫。
+                // 這裡我們根據輸入的城市名稱提供模擬結果。
+                
+                const lowerLocation = location.toLowerCase();
 
-                if (location === 'Tokyo') {
-                     weather.value = { temp: 20, description: '晴朗，微風', icon: '☀️', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }) };
-                } else if (location === 'Taipei') {
-                     weather.value = { temp: 28, description: '多雲，偶陣雨', icon: '🌧️', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }) };
-                } else if (location === 'Osaka') {
-                     weather.value = { temp: 22, description: '陰天，涼爽', icon: '☁️', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }) };
+                if (lowerLocation.includes('tokyo') || lowerLocation.includes('東京')) {
+                     weather.value = { temp: 20, description: '晴朗，微風', icon: '☀️', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
+                } else if (lowerLocation.includes('taipei') || lowerLocation.includes('台北')) {
+                     weather.value = { temp: 28, description: '多雲，偶陣雨', icon: '🌧️', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
+                } else if (lowerLocation.includes('london') || lowerLocation.includes('倫敦')) {
+                     weather.value = { temp: 12, description: '陰天，霧濛濛', icon: '🌫️', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
+                } else if (lowerLocation.includes('paris') || lowerLocation.includes('巴黎')) {
+                     weather.value = { temp: 18, description: '晴空萬里', icon: '🌞', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
                 } else {
-                     weather.value = { temp: null, description: '地區數據缺失', icon: '❌', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }) };
+                     weather.value = { temp: null, description: `未找到 ${location} 的模擬數據`, icon: '❌', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
                 }
+                weatherLocation.value = location; // 儲存查詢的城市名稱
+            }
+            
+            // 實時航班追蹤功能 (模擬)
+            const fetchFlightStatus = async () => {
+                // ... (航班追蹤邏輯不變) ...
+                if (!flightInfo.value.number) return; 
+                await new Promise(resolve => setTimeout(resolve, 1000)); 
+
+                console.log(`正在模擬追蹤航班 ${flightInfo.value.number} 的實時狀態...`);
+                
+                const currentStatus = ['準時', '延遲 15 分鐘', '已登機', '已抵達'];
+                const randomStatus = currentStatus[Math.floor(Math.random() * currentStatus.length)];
+                
+                flightInfo.value.status = randomStatus; 
             }
 
 
-            // 獲取貨幣符號 (略)
             const getCurrencySymbol = (currency) => {
+                // ... (貨幣符號邏輯不變) ...
                 switch(currency) {
                     case 'TWD': return '$';
                     case 'USD': return '$';
@@ -730,46 +847,82 @@
                 }
             }
 
-            // 主題色更新 (略)
             const updateTheme = (hex) => {
+                // ... (主題色更新邏輯不變) ...
                 primaryColor.value = hex;
                 document.documentElement.style.setProperty('--primary-color', hex);
                 const r = parseInt(hex.slice(1, 3), 16);
                 const g = parseInt(hex.slice(3, 5), 16);
                 const b = parseInt(hex.slice(5, 7), 16);
                 
-                if (g > r && g > b) {
-                     appBgColor.value = '#d1fae5';
-                } else if (r > b) {
-                    appBgColor.value = '#fbe2e2'; 
-                } else {
-                    appBgColor.value = '#c3e0ff'; 
-                }
+                if (g > r && g > b) { appBgColor.value = '#d1fae5'; } 
+                else if (r > b) { appBgColor.value = '#fbe2e2'; } 
+                else { appBgColor.value = '#c3e0ff'; }
             }
             
-            // 新增支出 (略)
+            // 新增支出 (保持不變)
             const addExpense = () => {
                 if (!newExpense.value.amount || !newExpense.value.name) return;
 
-                const expense = {
-                    ...newExpense.value,
-                    id: Date.now(),
-                    amount: Math.abs(newExpense.value.amount),
-                };
-                
+                const expense = { ...newExpense.value, id: Date.now(), amount: Math.abs(newExpense.value.amount) };
                 expenses.value.push(expense);
                 
-                // 重設表單
                 newExpense.value = { amount: null, name: '', type: 'cash', currency: 'JPY', date: currentDay.value || days.value[1].date };
                 showAccountingModal.value = false;
-
-                if (currentTab.value !== 'Accounting') {
-                    currentTab.value = 'Accounting';
-                }
+                if (currentTab.value !== 'Accounting') { currentTab.value = 'Accounting'; }
+            }
+            
+            // 【新增】新增待辦事項
+            const addTodoItem = () => {
+                if (!newTodo.value.name) return;
+                
+                const item = {
+                    id: Date.now(),
+                    name: newTodo.value.name,
+                    completed: false
+                };
+                
+                todoList.value.push(item);
+                newTodo.value.name = ''; // 清空表單
+                showTodoModal.value = false;
             }
 
-            // 打開編輯模態框 (略)
+            // 【新增】新增購物清單項目
+            const addShoppingItem = () => {
+                if (!newShoppingItem.value.name || !newShoppingItem.value.price) return;
+                
+                const item = {
+                    id: Date.now(),
+                    name: newShoppingItem.value.name,
+                    price: newShoppingItem.value.price,
+                    imgUrl: 'https://via.placeholder.com/150/f9fafb/555555?text=Shopping', // 預設圖片
+                    purchased: false
+                };
+                
+                shoppingList.value.push(item);
+                newShoppingItem.value = { name: '', price: null }; // 清空表單
+                showShoppingModal.value = false;
+            }
+            
+             // 【新增】新增行程項目
+            const addScheduleItem = () => {
+                if (!newScheduleItem.value.name) return;
+                
+                const item = {
+                    id: Date.now(),
+                    name: newScheduleItem.value.name,
+                    time: newScheduleItem.value.time,
+                    date: currentDay.value // 綁定到當前選擇的日期
+                };
+                
+                scheduleList.value.push(item);
+                newScheduleItem.value = { name: '', time: '' }; // 清空表單
+                showScheduleModal.value = false;
+            }
+
+
             const openEditModal = (type, itemData) => {
+                // ... (編輯模態框邏輯不變) ...
                 let label = '';
                 if (type === 'Todo') label = '代辦事項';
                 else if (type === 'Shopping') label = '購物清單項目';
@@ -777,16 +930,12 @@
                 else if (type === 'Accounting') label = '支出紀錄';
                 else if (type === 'Flight') label = '航班資訊';
 
-                editingItem.value = {
-                    type: type,
-                    typeLabel: label,
-                    data: JSON.parse(JSON.stringify(itemData)) 
-                };
+                editingItem.value = { type: type, typeLabel: label, data: JSON.parse(JSON.stringify(itemData)) };
                 showEditModal.value = true;
             }
 
-            // 儲存編輯後的項目 (略)
             const saveEdit = () => {
+                // ... (儲存編輯邏輯不變) ...
                 const item = editingItem.value;
                 const itemId = item.data.id;
 
@@ -799,21 +948,27 @@
                 } else if (item.type === 'Accounting') {
                     const index = expenses.value.findIndex(i => i.id === itemId);
                     if (index !== -1) expenses.value[index] = item.data;
+                } else if (item.type === 'Schedule') { // 新增行程編輯
+                     const index = scheduleList.value.findIndex(i => i.id === itemId);
+                    if (index !== -1) scheduleList.value[index] = item.data;
                 } else if (item.type === 'Flight') {
                     flightInfo.value = item.data; 
+                    fetchFlightStatus(); 
                 }
                 
                 showEditModal.value = false;
             }
 
-            // 刪除項目 (略)
             const deleteItem = (listName, id) => {
+                // ... (刪除項目邏輯不變) ...
                 if (listName === 'Todo') {
                     todoList.value = todoList.value.filter(item => item.id !== id);
                 } else if (listName === 'Shopping') {
                     shoppingList.value = shoppingList.value.filter(item => item.id !== id);
                 } else if (listName === 'Accounting') {
                      expenses.value = expenses.value.filter(item => item.id !== id);
+                } else if (listName === 'Schedule') { // 新增行程刪除
+                    scheduleList.value = scheduleList.value.filter(item => item.id !== id);
                 }
             }
             
@@ -824,17 +979,26 @@
                 }
             }
             
+            // 移除 openModal 的模擬提示
             const openModal = (tab) => {
-                alert(`模擬：開啟 ${tab} 的新增表單，請使用編輯功能修改範例項目。`);
+                if (tab === 'Schedule') showScheduleModal.value = true;
+                else if (tab === 'PreTrip') showTodoModal.value = true;
+                else if (tab === 'Accounting') showAccountingModal.value = true;
+                else if (tab === 'Shopping') showShoppingModal.value = true;
             }
             
             onMounted(() => {
+                // ... (初始化邏輯不變) ...
                 document.documentElement.style.setProperty('--primary-color', primaryColorInput.value);
-                // 載入時獲取匯率和天氣
                 fetchExchangeRate(); 
-                fetchWeather();
+                fetchWeather(); // 預設城市 Tokyo
+                fetchFlightStatus(); 
+
+                setInterval(() => {
+                    fetchExchangeRate();
+                    fetchFlightStatus();
+                }, 300000); 
                 
-                // 修復：確保 newExpense 的預設日期跟 Day 1 走
                 if (currentTab.value === 'Accounting' && days.value.length > 1) {
                     newExpense.value.date = currentDay.value;
                 }
@@ -844,21 +1008,24 @@
                 appTitle, currentTab, tripStartDate, totalTripDays, 
                 days, currentDay, currentDayLabel,
                 primaryColor, primaryColorInput, appBgColor, updateTheme,
-                // 【回傳新增的字體狀態】
                 fontOptions, selectedFont, 
                 // 貨幣與匯率
                 baseCurrency, exchangeRate, baseCurrencySymbol, getCurrencySymbol, fetchExchangeRate, convertToBaseCurrency,
-                // 天氣
-                weatherLocation, weather, fetchWeather,
+                // 天氣 (更新)
+                weatherLocation, weather, fetchWeather, 
                 // 航班
-                flightInfo,
+                flightInfo, fetchFlightStatus, 
                 // 記帳功能相關
                 expenses, expenseFilter, filteredExpenses, totalExpense,
                 showAccountingModal, newExpense, addExpense,
+                // 清單及行程 (新增)
+                todoList, addTodoItem, newTodo, showTodoModal,
+                shoppingList, addShoppingItem, newShoppingItem, showShoppingModal,
+                scheduleList, filteredSchedule, addScheduleItem, newScheduleItem, showScheduleModal,
                 // 編輯功能相關
                 showEditModal, editingItem, openEditModal, saveEdit, deleteAndCloseEditModal,
-                // 清單
-                todoList, shoppingList, openModal, deleteItem,
+                // 通用
+                openModal, deleteItem,
             }
         }
     }).mount('#app')
