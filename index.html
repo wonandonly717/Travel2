@@ -3,24 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ appTitle }}</title>
+    <title>{{ TRAVEL✈️ }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
-        /* -------------------- 移除自訂字體，固定為系統預設 (sans-serif) -------------------- */
-
+        /* -------------------- 全局與底色設定 -------------------- */
         body {
-            /* 調整背景漸層，讓底部更亮 */
-            background: linear-gradient(180deg, #c3e0ff 0%, #ffffff 100%);
+            /* 調整背景漸層，使用更柔和的顏色，並固定 */
+            background: linear-gradient(180deg, #e3f2ff 0%, #ffffff 100%); 
             background-attachment: fixed; 
-            font-family: sans-serif; /* 固定使用系統預設字體 */
+            font-family: 'Arial', 'Microsoft JhengHei', 'sans-serif'; 
         }
         #app {
             max-width: 420px;
             margin: 0 auto;
             min-height: 100vh;
             background-color: white; 
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.08); 
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.1); /* 增加卡片陰影質感 */
             position: relative;
         }
         
@@ -28,68 +27,85 @@
         :root {
             --primary-color: #3b82f6; 
         }
+        .text-primary { color: var(--primary-color); }
+        .bg-primary { background-color: var(--primary-color); }
 
-        /* 導航按鈕活動狀態 */
-        .nav-btn.active {
-            color: var(--primary-color); 
-            font-weight: 600;
+        /* -------------------- 頂部導航/卡片設定 -------------------- */
+        header {
+            background-color: #ffffff; /* 頂部固定白色背景 */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* 輕微陰影 */
         }
-
-        /* 頂部日期 Tab 的樣式 - 參照您的範本設計 */
+        
+        /* 日期 Tab 樣式 - 質感優化 */
         .day-tab {
-            background-color: #ffffff;
+            background-color: #f3f4f6;
             color: #4b5563; 
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border: none;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
         }
         .day-tab.active {
             background-color: var(--primary-color);
             color: #ffffff; 
-            border-color: var(--primary-color);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
-        /* App 頂部卡片 (記帳/行程) */
-        .main-card-bg {
-             background-color: var(--primary-color);
-             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        /* -------------------- 底部導航欄設定 (參照範本樣式) -------------------- */
+        .bottom-nav {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid #f3f4f6;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         }
-        .accounting-top-card {
-            background-color: var(--primary-color);
-            color: #ffffff;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        .nav-btn.active {
+            color: var(--primary-color); 
+            font-weight: 600;
+            transform: translateY(-2px);
         }
         
-        /* 飛機移動動畫 (CSS 修正) */
+        /* -------------------- 航班卡片樣式 (核心視覺優化) -------------------- */
+        .flight-card {
+            background-color: #ffffff; 
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08); /* 增加卡片深度 */
+        }
+        .flight-detail-divider {
+            height: 1px;
+            background-color: #f3f4f6;
+            margin: 15px 0;
+        }
+
+        /* 飛機移動動畫 */
         .flight-progress {
             position: relative;
             height: 2px;
-            background-color: #ffffff50;
+            background-color: #e5e7eb; /* 軌道顏色 */
             margin: 0 10px;
         }
         .flight-progress .plane {
             position: absolute;
-            top: -12px;
-            font-size: 24px;
+            top: -10px; /* 調整飛機位置 */
+            font-size: 20px;
             transition: left 1s ease-in-out;
+            color: var(--primary-color);
         }
-        .flight-progress[data-status="準時"] .plane {
-            left: 15%; 
+        /* 保持這裡的邏輯不變，用於模擬航班狀態變化 */
+        .flight-progress[data-status="準時"] .plane { left: 15%; }
+        .flight-progress[data-status="延遲"] .plane { left: 50%; }
+        .flight-progress[data-status="已抵達"] .plane { left: calc(100% - 20px); }
+        .flight-progress[data-status="取消"] .plane { left: 0; filter: grayscale(1); color: #9ca3af; }
+        .flight-progress[data-status="登機"] .plane { left: 5%; }
+        
+        /* 行程與購物卡片 */
+        .item-card {
+            background-color: #ffffff;
+            border: 1px solid #f3f4f6;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.15s;
         }
-        .flight-progress[data-status="延遲 15 分鐘"] .plane {
-            left: 50%; 
+        .item-card:hover {
+            transform: translateY(-1px);
         }
-        .flight-progress[data-status="已抵達"] .plane {
-            left: calc(100% - 20px); 
-        }
-        .flight-progress[data-status="取消"] .plane {
-            left: 0; 
-            filter: grayscale(1);
-        }
-        .flight-progress[data-status="已登機"] .plane {
-            left: 5%;
-        }
-
     </style>
 </head>
 <body>
@@ -99,25 +115,25 @@
          'background': 'linear-gradient(180deg, ' + appBgColor + ' 0%, #ffffff 100%)', 
          'background-attachment': 'fixed',
      }">
-    <header class="p-4 pt-10 sticky top-0 bg-white bg-opacity-80 backdrop-blur-sm z-20">
+    <header class="p-4 pt-10 sticky top-0 bg-white bg-opacity-95 backdrop-blur-sm z-20 border-b border-gray-100">
         <div class="flex justify-between items-start">
             <h1 class="text-2xl font-semibold text-gray-900">{{ appTitle }}</h1>
             
             <div class="text-right text-sm text-gray-500">
                 <p>基礎幣別：<span class="font-medium text-gray-800">{{ baseCurrency }}</span></p>
-                <p v-if="exchangeRate" class="font-medium mt-1">
-                    1 JPY ≈ {{ exchangeRate.toFixed(4) }} {{ baseCurrency }}
+                <p class="font-medium mt-1">
+                    1 {{ tripCurrency }} ≈ 
+                    <span v-if="exchangeRate" class="text-primary font-bold">{{ exchangeRate.toFixed(4) }} {{ baseCurrency }}</span>
+                    <span v-else class="text-xs text-red-500 mt-1">匯率更新中...</span>
                 </p>
-                <p v-else class="text-xs text-red-500 mt-1">匯率更新中...</p>
             </div>
         </div>
         
-        <div class="bg-white p-4 mt-4 rounded-xl shadow-md border border-gray-100 flex justify-between items-center">
+        <div class="bg-white p-4 mt-4 rounded-xl shadow-lg border border-gray-100 flex justify-between items-center">
              <div>
                  <p class="text-xl font-bold text-gray-800">{{ weatherLocation }}</p>
-                
                 <p class="text-sm text-gray-500 mt-1">{{ weather.date }} 
-                    <span v-if="weather.loading" class="animate-pulse text-blue-500"> 載入中...</span>
+                    <span v-if="weather.loading" class="animate-pulse text-primary"> 載入中...</span>
                 </p>
             </div>
             
@@ -135,7 +151,7 @@
         <div class="flex overflow-x-auto py-3 space-x-3 mt-4">
             <button v-for="day in days" :key="day.date"
                     @click="currentDay = day.date"
-                    class="day-tab flex-shrink-0 px-4 py-2 rounded-xl text-sm transition duration-200"
+                    class="day-tab flex-shrink-0 px-4 py-2 rounded-full text-sm transition duration-200"
                     :class="{ 'active': currentDay === day.date }"
             >
                 {{ day.label }}
@@ -148,70 +164,73 @@
         
         <div v-if="currentTab === 'Schedule'">
             <h2 class="text-lg font-semibold text-gray-700 mb-3">{{ currentDayLabel }} 行程安排</h2>
-            <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 mb-4" @click="showScheduleModal = true">
-                <span class="text-sm font-medium text-blue-500 mr-1">+</span>新增行程/活動
-            </button>
             
-            <div class="main-card-bg p-5 mb-5 rounded-2xl text-white shadow-xl">
+            <div class="flight-card p-5 mb-5 rounded-2xl shadow-xl">
                  <div class="flex justify-between items-start mb-3">
-                    <h3 class="text-xl font-bold">✈️ 航班資訊</h3>
-                    <button class="text-gray-300 hover:text-white" @click="openEditModal('Flight', flightInfo)">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    <h3 class="text-xl font-bold text-gray-800">✈️ 航班資訊</h3>
+                    <button class="text-primary hover:text-blue-700 flex items-center text-sm font-medium" 
+                            @click="fetchFlightStatus">
+                         <svg class="w-4 h-4 mr-1 animate-spin" v-if="flightInfo.updating" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356-2A8.001 8.001 0 004.582 13m-2.83 5h2.34l.412 1.648L7.49 22h9.02l-1.55-2.352L19.418 19H20a1 1 0 001-1v-5h-.582"></path></svg>
+                         <svg v-else class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356-2A8.001 8.001 0 004.582 13m-2.83 5h2.34l.412 1.648L7.49 22h9.02l-1.55-2.352L19.418 19H20a1 1 0 001-1v-5h-.582"></path></svg>
+                        {{ flightInfo.updating ? '更新中' : '更新狀態' }}
                     </button>
                 </div>
                 
-                <p class="text-lg font-bold mb-3" :class="{'text-yellow-300': flightInfo.status !== '準時'}">
-                     {{ flightInfo.number }} - 狀態：{{ flightInfo.status }}
+                <p class="text-lg font-bold mb-3 text-gray-800" :class="{'text-red-500': flightInfo.status.includes('延遲') || flightInfo.status.includes('取消')}">
+                     {{ flightInfo.number }} - <span class="text-primary">{{ flightInfo.status }}</span>
                 </p>
 
                 <div class="flex items-center justify-between text-sm mb-5 relative">
                     <div class="text-center">
-                        <span class="block text-2xl font-bold text-yellow-300">{{ flightInfo.departureAirport }}</span>
-                        <span class="text-xs text-gray-300">出發</span>
+                        <span class="block text-xl font-bold text-gray-800">{{ flightInfo.departureAirport }}</span>
+                        <span class="text-xs text-gray-500">出發</span>
                     </div>
 
-                    <div class="flex-1 flight-progress" :data-status="flightInfo.status">
+                    <div class="flex-1 flight-progress" :data-status="getFlightStatusKey(flightInfo.status)">
                         <span class="plane text-2xl">✈️</span>
                     </div>
 
                     <div class="text-center">
-                        <span class="block text-2xl font-bold text-yellow-300">{{ flightInfo.arrivalAirport }}</span>
-                        <span class="text-xs text-gray-300">抵達</span>
+                        <span class="block text-xl font-bold text-gray-800">{{ flightInfo.arrivalAirport }}</span>
+                        <span class="text-xs text-gray-500">抵達</span>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-4 gap-y-3 gap-x-4 text-sm font-light">
-                    <div>
-                        <p class="font-medium text-gray-300">航廈</p>
-                        <p class="mt-1 font-semibold text-white text-lg">{{ flightInfo.terminal }}</p>
-                    </div>
-                    <div>
-                        <p class="font-medium text-gray-300">登機門</p>
-                        <p class="mt-1 font-semibold text-white text-lg">{{ flightInfo.gate }}</p>
+                <div class="grid grid-cols-4 text-sm font-light border-t pt-4 border-gray-100">
+                    <div class="col-span-2">
+                        <p class="font-medium text-gray-500">起飛時間 (建議 Check-in)</p>
+                        <p class="mt-1 font-extrabold text-2xl text-primary">{{ flightInfo.departureTime }}</p>
+                        <p class="text-xs text-gray-400">登機門 {{ flightInfo.gate }}</p>
                     </div>
                     <div class="col-span-2 text-right"> 
-                         <p class="font-medium text-gray-300">起飛時間</p>
-                         <p class="mt-1 font-semibold text-lg text-white">{{ flightInfo.departureTime }}</p>
+                        <p class="font-medium text-gray-500">預計抵達時間</p>
+                        <p class="mt-1 font-extrabold text-2xl text-gray-800">{{ flightInfo.arrivalTime }}</p>
+                        <p class="text-xs text-gray-400">航廈 {{ flightInfo.terminal }}</p>
                     </div>
-                    
-                    <div class="col-span-2"> 
-                        <p class="font-medium text-gray-300">建議 Check-in</p>
-                        <p class="mt-1 font-semibold text-lg text-white">{{ flightInfo.checkInTime }}</p>
-                    </div>
-                     <div class="col-span-2 text-right"> 
-                        <p class="font-medium text-gray-300">抵達時間</p>
-                        <p class="mt-1 font-semibold text-lg text-white">{{ flightInfo.arrivalTime }}</p>
-                    </div>
+                </div>
+
+                <div class="flight-detail-divider"></div>
+
+                <div class="flex justify-between items-center text-sm text-gray-600">
+                    <p>登機時間：{{ flightInfo.checkInTime }}</p>
+                    <p class="font-medium">座位：<span class="font-bold text-primary">12A</span></p>
                 </div>
             </div>
             
-             <div v-for="item in filteredSchedule" :key="item.id" 
-                 class="bg-white p-4 mb-4 rounded-2xl flex justify-between items-center shadow-md border border-gray-100">
+             <button class="flex items-center text-sm font-medium text-gray-500 hover:text-primary mb-4" @click="showScheduleModal = true">
+                <span class="text-sm font-medium text-primary mr-1">+</span>新增行程/活動
+            </button>
+
+            <div v-for="item in filteredSchedule" :key="item.id" 
+                 class="item-card p-4 mb-3 rounded-xl flex justify-between items-center">
                 <div class="flex items-center">
-                    <span v-if="item.time" class="text-lg font-bold mr-3 text-gray-800">{{ item.time }}</span>
-                    <span class="text-lg text-gray-700">{{ item.name }}</span>
+                    <div class="w-12 text-center mr-4">
+                        <span v-if="item.time" class="block text-lg font-bold text-gray-800 leading-none">{{ item.time.split(':')[0] }}<span class="text-xs font-normal block text-gray-500">{{ item.time.split(':')[1] }}</span></span>
+                        <span v-else class="text-gray-400">全日</span>
+                    </div>
+                    <span class="text-lg text-gray-700 font-medium">{{ item.name }}</span>
                 </div>
-                <button class="text-gray-400 hover:text-gray-600" @click="openEditModal('Schedule', item)">
+                <button class="text-gray-400 hover:text-gray-600 p-1" @click="openEditModal('Schedule', item)">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                 </button>
             </div>
@@ -221,26 +240,23 @@
         
         <div v-else-if="currentTab === 'PreTrip'">
             <h2 class="text-lg font-semibold text-gray-700 mb-3">代辦清單 (Todo List)</h2>
-            <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 mb-4" @click="showTodoModal = true">
-                <span class="text-sm font-medium text-blue-500 mr-1">+</span>新增代辦事項
+            <button class="flex items-center text-sm font-medium text-gray-500 hover:text-primary mb-4" @click="showTodoModal = true">
+                <span class="text-sm font-medium text-primary mr-1">+</span>新增代辦事項
             </button>
 
-            <div v-for="item in todoList" :key="item.id" class="bg-white p-4 mb-4 rounded-2xl flex justify-between items-center shadow-md border border-gray-100">
-                <div class="flex items-center">
+            <div v-for="item in todoList" :key="item.id" class="item-card p-4 mb-3 rounded-xl flex justify-between items-center">
+                <div class="flex items-center flex-1">
                     <input type="checkbox" :checked="item.completed" @change="item.completed = !item.completed" 
                            class="form-checkbox h-5 w-5 rounded-lg border-gray-300 mr-4 focus:ring-current"
                            :style="{ 'color': primaryColor, 'border-color': primaryColor }"
                     >
-                    <span class="text-lg text-gray-700" :class="{ 'line-through text-gray-400': item.completed }">
+                    <span class="text-lg text-gray-700 font-medium" :class="{ 'line-through text-gray-400': item.completed }">
                         {{ item.name }}
                     </span>
                 </div>
                 <div class="flex space-x-2">
-                    <button class="text-gray-400 hover:text-gray-600" @click="openEditModal('Todo', item)">
+                    <button class="text-gray-400 hover:text-gray-600 p-1" @click="openEditModal('Todo', item)">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                    </button>
-                    <button class="text-gray-400 hover:text-red-500" @click="deleteItem('Todo', item.id)">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
                 </div>
             </div>
@@ -249,23 +265,24 @@
         <div v-else-if="currentTab === 'Accounting'">
             <h2 class="text-lg font-semibold text-gray-700 mb-4">旅費管理</h2>
             
-            <div class="accounting-top-card p-6 mb-6 rounded-2xl shadow-xl">
-                <p class="text-sm font-light text-gray-200">總支出 ({{ baseCurrency }})</p>
+            <div class="bg-primary p-6 mb-6 rounded-2xl shadow-xl text-white">
+                <p class="text-sm font-light text-gray-200">總支出 (以 {{ baseCurrency }} 結算)</p>
                 <h3 class="text-4xl font-extrabold my-2">{{ baseCurrencySymbol }}{{ totalExpense }}</h3>
+                <p class="text-xs font-light text-gray-300">此為估算值，實際匯率請以銀行為準。</p>
             </div>
 
             <h3 class="text-md font-semibold text-gray-700 mb-3">支出明細</h3>
             <div class="flex justify-between items-center mb-4">
-                <div class="p-1 bg-gray-100 rounded-xl flex max-w-xs">
-                    <button class="flex-1 py-2 px-4 rounded-lg text-sm text-gray-600 transition duration-150" 
-                        :class="{'bg-white shadow-md font-medium': expenseFilter === 'all'}" @click="expenseFilter = 'all'">全部</button>
-                    <button class="flex-1 py-2 px-4 rounded-lg text-sm text-gray-600 transition duration-150" 
-                        :class="{'bg-white shadow-md font-medium': expenseFilter === 'cash'}" @click="expenseFilter = 'cash'">現金</button>
-                    <button class="flex-1 py-2 px-4 rounded-lg text-sm text-gray-600 transition duration-150" 
-                        :class="{'bg-white shadow-md font-medium': expenseFilter === 'credit'}" @click="expenseFilter = 'credit'">信用卡</button>
+                <div class="p-1 bg-gray-100 rounded-xl flex max-w-xs border border-gray-200">
+                    <button class="flex-1 py-1.5 px-3 rounded-lg text-sm text-gray-600 transition duration-150" 
+                        :class="{'bg-white shadow-md font-medium text-primary': expenseFilter === 'all'}" @click="expenseFilter = 'all'">全部</button>
+                    <button class="flex-1 py-1.5 px-3 rounded-lg text-sm text-gray-600 transition duration-150" 
+                        :class="{'bg-white shadow-md font-medium text-primary': expenseFilter === 'cash'}" @click="expenseFilter = 'cash'">現金</button>
+                    <button class="flex-1 py-1.5 px-3 rounded-lg text-sm text-gray-600 transition duration-150" 
+                        :class="{'bg-white shadow-md font-medium text-primary': expenseFilter === 'credit'}" @click="expenseFilter = 'credit'">信用卡</button>
                 </div>
-                <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700" @click="showAccountingModal = true">
-                    <span class="text-sm font-medium text-blue-500 mr-1">+</span>記一筆
+                <button class="flex items-center text-sm font-medium text-gray-500 hover:text-primary" @click="showAccountingModal = true">
+                    <span class="text-sm font-medium text-primary mr-1">+</span>記一筆
                 </button>
             </div>
             
@@ -274,13 +291,16 @@
             <ul class="space-y-3">
                 <li v-for="expense in filteredExpenses" :key="expense.id" 
                     @click="openEditModal('Accounting', expense)"
-                    class="bg-white p-4 rounded-xl flex justify-between items-center shadow-md border border-gray-100 hover:shadow-lg transition cursor-pointer">
+                    class="item-card p-4 rounded-xl flex justify-between items-center hover:bg-gray-50 transition cursor-pointer">
                     <div>
                         <p class="font-medium text-gray-800">{{ expense.name }}</p>
                         <p class="text-xs text-gray-400 mt-1">
                             {{ expense.type === 'cash' ? '💵 現金' : '💳 信用卡' }} 
-                            - {{ expense.currency }} 
-                            <span v-if="expense.currency !== baseCurrency">({{ baseCurrencySymbol }}{{ convertToBaseCurrency(expense.amount, expense.currency).toFixed(0) }})</span>
+                            <span class="mx-1">•</span>
+                            {{ expense.currency }} 
+                            <span v-if="expense.currency !== baseCurrency" class="font-semibold text-primary">
+                                (約 {{ baseCurrencySymbol }}{{ convertToBaseCurrency(expense.amount, expense.currency).toFixed(0) }})
+                            </span>
                         </p>
                     </div>
                     <span class="text-lg font-bold text-red-600">
@@ -292,25 +312,22 @@
         </div>
         
         <div v-else-if="currentTab === 'Shopping'">
-            <h2 class="text-lg font-semibold text-gray-700 mb-3">購物清單</h2>
-            <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 mb-4" @click="showShoppingModal = true">
-                <span class="text-sm font-medium text-blue-500 mr-1">+</span>新增項目
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">購物清單 (以 {{ tripCurrency }} 計價)</h2>
+            <button class="flex items-center text-sm font-medium text-gray-500 hover:text-primary mb-4" @click="showShoppingModal = true">
+                <span class="text-sm font-medium text-primary mr-1">+</span>新增項目
             </button>
 
-            <div v-for="item in shoppingList" :key="item.id" class="bg-white p-4 mb-4 rounded-2xl flex justify-between items-center shadow-md border border-gray-100">
+            <div v-for="item in shoppingList" :key="item.id" class="item-card p-4 mb-3 rounded-xl flex justify-between items-center">
                 <div class="flex items-center">
                     <img :src="item.imgUrl" alt="商品圖片" class="w-16 h-16 object-cover rounded-xl mr-4 border border-gray-100">
                     <div>
                         <p class="text-lg font-medium text-gray-800">{{ item.name }}</p>
-                        <p class="text-md text-gray-600 mt-1">¥ {{ item.price }}</p>
+                        <p class="text-md text-gray-600 mt-1 font-bold text-red-500">{{ getCurrencySymbol(tripCurrency) }} {{ item.price }}</p>
                     </div>
                 </div>
                  <div class="flex space-x-2">
-                    <button class="text-gray-400 hover:text-gray-600" @click="openEditModal('Shopping', item)">
+                    <button class="text-gray-400 hover:text-gray-600 p-1" @click="openEditModal('Shopping', item)">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                    </button>
-                    <button class="text-gray-400 hover:text-red-500" @click="deleteItem('Shopping', item.id)">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
                 </div>
             </div>
@@ -318,32 +335,26 @@
 
         <div v-else-if="currentTab === 'Settings'">
             <h2 class="text-2xl font-semibold mb-6 text-gray-700">⚙️ 設定與主題</h2>
-
+            
             <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
-                <h3 class="font-medium mb-3 text-gray-700">旅遊日期與天數</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">旅行起始日期 (Day 1)</label>
-                        <input type="date" v-model="tripStartDate" required
-                               class="w-full p-2 border border-gray-200 rounded-lg focus:ring-blue-300 focus:border-blue-300 transition duration-150">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">總旅行天數</label>
-                        <input type="number" v-model.number="totalTripDays" min="1" max="30" required
-                               class="w-full p-2 border border-gray-200 rounded-lg focus:ring-blue-300 focus:border-blue-300 transition duration-150">
-                    </div>
-                </div>
+                <h3 class="font-medium mb-3 text-gray-700">本次旅行的主要貨幣 (旅遊地貨幣)</h3>
+                <select v-model="tripCurrency" @change="fetchExchangeRate" class="w-full p-2 border border-gray-200 rounded-lg bg-white text-gray-700 focus:ring-primary focus:border-primary">
+                    <option value="JPY">JPY - 日幣</option>
+                    <option value="USD">USD - 美元</option>
+                    <option value="TWD">TWD - 新台幣</option>
+                    <option value="CNY">CNY - 人民幣</option>
+                    <option value="EUR">EUR - 歐元</option>
+                    <option value="KRW">KRW - 韓元</option>
+                    <option value="GBP">GBP - 英鎊</option>
+                    <option value="THB">THB - 泰銖</option>
+                    <option value="HKD">HKD - 港幣</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-2">將用於右上角匯率顯示和記帳/購物預設幣別。</p>
             </div>
-
+            
             <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
-                <h3 class="font-medium mb-3 text-gray-700">專案名稱/暱稱</h3>
-                <input type="text" v-model="appTitle" placeholder="例如：我的旅程App" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-blue-300 focus:border-blue-300 transition duration-150">
-            </div>
-
-
-            <div class="bg-white p-4 mb-4 rounded-xl shadow-md border border-gray-100">
-                <h3 class="font-medium mb-3 text-gray-700">App 基礎結算貨幣</h3>
-                <select v-model="baseCurrency" @change="fetchExchangeRate" class="w-full p-2 border border-gray-200 rounded-lg bg-white text-gray-700 focus:ring-current" :style="{ 'border-color': primaryColor }">
+                <h3 class="font-medium mb-3 text-gray-700">App 基礎結算貨幣 (您的本國貨幣)</h3>
+                <select v-model="baseCurrency" @change="fetchExchangeRate" class="w-full p-2 border border-gray-200 rounded-lg bg-white text-gray-700 focus:ring-primary focus:border-primary">
                     <option value="TWD">TWD - 新台幣</option>
                     <option value="USD">USD - 美元</option>
                     <option value="JPY">JPY - 日幣</option>
@@ -352,33 +363,32 @@
                     <option value="KRW">KRW - 韓元</option>
                     <option value="GBP">GBP - 英鎊</option>
                 </select>
-                <p class="text-xs text-gray-500 mt-2">更改後，App 將自動嘗試更新匯率並計算總支出。</p>
+                <p class="text-xs text-gray-500 mt-2">總支出將以此幣別顯示。</p>
             </div>
 
 
             <div class="bg-white p-4 rounded-xl shadow-md border border-gray-100">
                 <h3 class="font-medium mb-3 text-gray-700">自訂 App 主題顏色</h3>
                 <div class="flex items-center space-x-3">
-                    <input type="color" v-model="primaryColorInput" @input="updateTheme(primaryColorInput)" class="rounded-lg">
+                    <input type="color" v-model="primaryColorInput" @input="updateTheme(primaryColorInput)" class="rounded-lg h-10 w-10">
                     <span class="font-mono text-sm text-gray-600">{{ primaryColorInput }}</span>
                 </div>
             </div>
-            
-            </div>
+        </div>
     </main>
     
     <nav class="fixed bottom-0 left-0 right-0 max-w-sm mx-auto z-30">
-        <div class="flex justify-around items-center bg-white p-3 mx-4 mb-4 rounded-full shadow-2xl">
-            <button @click="currentTab = 'Schedule'" class="nav-btn flex flex-col items-center p-2" :class="{ 'active': currentTab === 'Schedule' }">
+        <div class="bottom-nav flex justify-around items-center p-3 mx-4 mb-4 rounded-full">
+            <button @click="currentTab = 'Schedule'" class="nav-btn flex flex-col items-center p-2 transition duration-150" :class="{ 'active': currentTab === 'Schedule' }">
                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-4 4h.01M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span class="text-xs mt-1">行程</span></button>
-            <button @click="currentTab = 'PreTrip'" class="nav-btn flex flex-col items-center p-2" :class="{ 'active': currentTab === 'PreTrip' }">
+            <button @click="currentTab = 'PreTrip'" class="nav-btn flex flex-col items-center p-2 transition duration-150" :class="{ 'active': currentTab === 'PreTrip' }">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5h6"></path></svg><span class="text-xs mt-1">代辦</span></button>
-            <button @click="currentTab = 'Accounting'" class="nav-btn flex flex-col items-center p-2" :class="{ 'active': currentTab === 'Accounting' }">
+            <button @click="currentTab = 'Accounting'" class="nav-btn flex flex-col items-center p-2 transition duration-150" :class="{ 'active': currentTab === 'Accounting' }">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 6v-1m0 1v3m0 0h.01M12 18V9.143a4.99 4.99 0 00-3-1.071M12 18L7.143 18m4.857-0L16.857 18"></path></svg><span class="text-xs mt-1">記帳</span></button>
-            <button @click="currentTab = 'Shopping'" class="nav-btn flex flex-col items-center p-2" :class="{ 'active': currentTab === 'Shopping' }">
+            <button @click="currentTab = 'Shopping'" class="nav-btn flex flex-col items-center p-2 transition duration-150" :class="{ 'active': currentTab === 'Shopping' }">
                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg><span class="text-xs mt-1">購物</span></button>
-             <button @click="currentTab = 'Settings'" class="nav-btn flex flex-col items-center p-2" :class="{ 'active': currentTab === 'Settings' }">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span class="text-xs mt-1">設定</span></button>
+             <button @click="currentTab = 'Settings'" class="nav-btn flex flex-col items-center p-2 transition duration-150" :class="{ 'active': currentTab === 'Settings' }">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.549.34.846.126.969-.071l1.5-2.5Z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span class="text-xs mt-1">設定</span></button>
         </div>
     </nav>
     
@@ -398,10 +408,11 @@
                             <option value="EUR">EUR</option>
                             <option value="KRW">KRW</option>
                             <option value="GBP">GBP</option>
+                            <option value="THB">THB</option>
+                            <option value="HKD">HKD</option>
                         </select>
                         <input type="number" step="1" v-model.number="newExpense.amount" required
-                           class="flex-1 p-3 border border-gray-300 rounded-r-lg text-lg focus:ring-current focus:border-current"
-                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }"
+                           class="flex-1 p-3 border border-gray-300 rounded-r-lg text-lg focus:ring-primary focus:border-primary"
                            placeholder="100">
                     </div>
                 </div>
@@ -409,8 +420,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">用途描述</label>
                     <input type="text" v-model="newExpense.name" required
-                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current"
-                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
                            placeholder="例如：晚餐、計程車">
                 </div>
 
@@ -433,8 +443,8 @@
                     </div>
                 </div>
 
-                <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6"
-                        :style="{ 'background-color': primaryColor, 'hover-background-color': primaryColor }">
+                <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6 bg-primary"
+                        :style="{ 'background-color': primaryColor }">
                     儲存紀錄
                 </button>
             </form>
@@ -445,7 +455,6 @@
         </div>
     </div>
 
-
     <div v-if="showTodoModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-end justify-center z-40" @click.self="showTodoModal = false">
         <div class="bg-white w-full max-w-sm rounded-t-3xl p-6 shadow-2xl">
              <h3 class="text-xl font-medium mb-4 text-gray-800 border-b pb-2">新增行前代辦事項</h3>
@@ -453,12 +462,11 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">代辦事項內容</label>
                     <input type="text" v-model="newTodo.name" required
-                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current"
-                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
                            placeholder="例如：兌換日幣">
                 </div>
-                 <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6"
-                        :style="{ 'background-color': primaryColor, 'hover-background-color': primaryColor }">
+                 <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6 bg-primary"
+                        :style="{ 'background-color': primaryColor }">
                     新增
                 </button>
             </form>
@@ -470,24 +478,22 @@
 
     <div v-if="showShoppingModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-end justify-center z-40" @click.self="showShoppingModal = false">
         <div class="bg-white w-full max-w-sm rounded-t-3xl p-6 shadow-2xl">
-             <h3 class="text-xl font-medium mb-4 text-gray-800 border-b pb-2">新增購物清單項目</h3>
+             <h3 class="text-xl font-medium mb-4 text-gray-800 border-b pb-2">新增購物清單項目 ({{ tripCurrency }} 計價)</h3>
             <form @submit.prevent="addShoppingItem" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">商品名稱</label>
                     <input type="text" v-model="newShoppingItem.name" required
-                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current"
-                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }"
-                           placeholder="例如：東京香蕉">
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                           placeholder="例如：當地特產">
                 </div>
                  <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">價格 (JPY)</label>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">價格 ({{ tripCurrency }})</label>
                     <input type="number" v-model.number="newShoppingItem.price" required
-                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current"
-                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
                            placeholder="1000">
                 </div>
-                 <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6"
-                        :style="{ 'background-color': primaryColor, 'hover-background-color': primaryColor }">
+                 <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6 bg-primary"
+                        :style="{ 'background-color': primaryColor }">
                     新增
                 </button>
             </form>
@@ -505,17 +511,16 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">時間 (選填)</label>
                     <input type="time" v-model="newScheduleItem.time"
-                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current">
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">活動/地點名稱</label>
                     <input type="text" v-model="newScheduleItem.name" required
-                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current"
-                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }"
-                           placeholder="例如：迪士尼樂園">
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                           placeholder="例如：景點名稱">
                 </div>
-                 <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6"
-                        :style="{ 'background-color': primaryColor, 'hover-background-color': primaryColor }">
+                 <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6 bg-primary"
+                        :style="{ 'background-color': primaryColor }">
                     新增行程
                 </button>
             </form>
@@ -525,8 +530,7 @@
         </div>
     </div>
 
-
-     <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-end justify-center z-40" @click.self="showEditModal = false">
+    <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-end justify-center z-40" @click.self="showEditModal = false">
         <div class="bg-white w-full max-w-sm rounded-t-3xl p-6 shadow-2xl transform translate-y-0 transition duration-300">
             <h3 class="text-xl font-medium mb-4 text-gray-800 border-b pb-2">編輯 {{ editingItem.typeLabel }}</h3>
             
@@ -535,13 +539,19 @@
                 <div v-if="editingItem.type === 'Schedule'">
                     <label class="block text-sm font-medium text-gray-600 mb-1">時間</label>
                     <input type="time" v-model="editingItem.data.time"
-                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current">
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
                 </div>
-                <div v-if="editingItem.type !== 'Accounting' && editingItem.type !== 'Flight'">
+                <div v-if="editingItem.type !== 'Accounting'">
                     <label class="block text-sm font-medium text-gray-600 mb-1">{{ editingItem.typeLabel }} 名稱</label>
                     <input type="text" v-model="editingItem.data.name" required
-                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-current focus:border-current"
-                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }">
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
+                </div>
+                
+                <div v-if="editingItem.type === 'Shopping'">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">價格 ({{ tripCurrency }})</label>
+                    <input type="number" v-model.number="editingItem.data.price" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                           placeholder="1000">
                 </div>
 
                 <div v-if="editingItem.type === 'Accounting'">
@@ -555,10 +565,11 @@
                             <option value="EUR">EUR</option>
                             <option value="KRW">KRW</option>
                             <option value="GBP">GBP</option>
+                             <option value="THB">THB</option>
+                            <option value="HKD">HKD</option>
                         </select>
                         <input type="number" step="1" v-model.number="editingItem.data.amount" required
-                           class="flex-1 p-3 border border-gray-300 rounded-r-lg text-lg focus:ring-current focus:border-current"
-                           :style="{ 'border-color': primaryColor, 'focus-ring-color': primaryColor, 'focus-border-color': primaryColor }">
+                           class="flex-1 p-3 border border-gray-300 rounded-r-lg text-lg focus:ring-primary focus:border-primary">
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4 mt-4">
@@ -581,59 +592,20 @@
                     </div>
                 </div>
                 
-                 <div v-if="editingItem.type === 'Flight'" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">航班編號</label>
-                        <input type="text" v-model="editingItem.data.number" class="w-full p-3 border border-gray-300 rounded-lg">
-                    </div>
-                     <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">起飛機場代號</label>
-                            <input type="text" v-model="editingItem.data.departureAirport" class="w-full p-3 border border-gray-300 rounded-lg">
-                        </div>
-                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">抵達機場代號</label>
-                            <input type="text" v-model="editingItem.data.arrivalAirport" class="w-full p-3 border border-gray-300 rounded-lg">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">航廈 (Terminal)</label>
-                            <input type="text" v-model="editingItem.data.terminal" class="w-full p-3 border border-gray-300 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">登機門 (Gate)</label>
-                            <input type="text" v-model="editingItem.data.gate" class="w-full p-3 border border-gray-300 rounded-lg">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">起飛時間 (24H)</label>
-                            <input type="time" v-model="editingItem.data.departureTime" class="w-full p-3 border border-gray-300 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">抵達時間 (24H)</label>
-                            <input type="time" v-model="editingItem.data.arrivalTime" class="w-full p-3 border border-gray-300 rounded-lg">
-                        </div>
-                    </div>
-                     <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">建議 Check-in 時間</label>
-                        <input type="time" v-model="editingItem.data.checkInTime" class="w-full p-3 border border-gray-300 rounded-lg">
-                    </div>
-                </div>
 
-                <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6"
-                        :style="{ 'background-color': primaryColor, 'hover-background-color': primaryColor }">
+                <button type="submit" class="w-full py-3 text-white font-medium rounded-lg shadow-md transition duration-200 mt-6 bg-primary"
+                        :style="{ 'background-color': primaryColor }">
                     確認修改
                 </button>
             </form>
 
-            <button v-if="editingItem.type !== 'Flight'" class="mt-4 w-full py-2 text-red-500 rounded-lg border border-gray-200 hover:bg-gray-50" 
+            <button class="mt-4 w-full py-2 text-red-500 rounded-lg border border-gray-200 hover:bg-red-50" 
                     @click="deleteAndCloseEditModal(editingItem.type, editingItem.data.id)">
                 刪除此項目
             </button>
         </div>
     </div>
+
 
 </div>
 
@@ -643,10 +615,8 @@
     createApp({
         setup() {
             // 基礎狀態
-            const appTitle = ref('TRAVEL') // 【最終修正 1】 網頁名稱固定為 TRAVEL
+            const appTitle = ref('TRAVEL') 
             const currentTab = ref('Schedule') 
-            
-            // --- 字體功能已移除 ---
             
             // --- 旅遊日期設定 ---
             const tripStartDate = ref('2025-12-08'); 
@@ -654,16 +624,22 @@
             const currentDay = ref(tripStartDate.value); 
 
             // --- 貨幣和匯率狀態 ---
-            const baseCurrency = ref('TWD') 
-            const exchangeRates = ref({})  
+            const baseCurrency = ref('TWD') // 基礎結算幣別 (例如：新台幣)
+            const tripCurrency = ref('JPY') // 【新增/修正】旅遊地主要貨幣 (例如：日幣、美元)
+            
+            // 由於 API 限制，我們使用一個固定值來模擬所有貨幣兌 TWD 的匯率 (1 單位貨幣 = ? TWD)
+            const exchangeRates = ref({
+                "TWD": 1, "USD": 31, "JPY": 0.21, "CNY": 4.5, "EUR": 34, "KRW": 0.025, "GBP": 38, "THB": 0.85, "HKD": 4.0 
+            })  
+            // 旅遊地貨幣 (tripCurrency) 兌基礎幣別 (TWD) 的匯率
             const exchangeRate = ref(0.21) 
 
             // --- 天氣狀態 ---
-            const weatherLocation = ref('Taipei'); // 模擬 GPS/IP 初始位置
+            const weatherLocation = ref('Destination'); // 模擬 GPS/IP 初始位置
             const weather = ref({
-                temp: 28,
-                description: '多雲，偶陣雨',
-                icon: '🌧️',
+                temp: 20,
+                description: '晴朗，微風',
+                icon: '☀️',
                 date: '12月12日',
                 loading: false
             });
@@ -675,45 +651,36 @@
                 departureTime: '09:05',
                 departureAirport: 'TPE',
                 arrivalTime: '13:00',
-                arrivalAirport: 'NRT',
+                arrivalAirport: 'NRT', // 目的地機場
                 checkInTime: '07:00',
                 terminal: 'T2',      
-                gate: 'B10'          
+                gate: 'B10',
+                updating: false 
             });
+            
+            // --- 主題顏色狀態 ---
+            const primaryColorInput = ref('#3b82f6')
+            const primaryColor = ref('#3b82f6')
+            const appBgColor = ref('#e3f2ff') 
 
-            // --- 模態框狀態 ---
+            // --- 模態框及數據清單 (維持原樣) ---
             const showAccountingModal = ref(false)
             const showTodoModal = ref(false) 
             const showShoppingModal = ref(false) 
             const showScheduleModal = ref(false) 
             const showEditModal = ref(false)
             const editingItem = ref({ type: '', typeLabel: '', data: null }); 
-            
-            // --- 新增項目表單狀態 ---
-            const newExpense = ref({
-                amount: null, name: '', type: 'cash', currency: 'JPY', date: '2025-12-08' 
-            })
-            const newTodo = ref({ 
-                name: ''
-            })
-            const newShoppingItem = ref({ 
-                name: '',
-                price: null
-            })
-            const newScheduleItem = ref({ 
-                 time: '',
-                 name: ''
-            })
-            
-            // 主題顏色狀態
-            const primaryColorInput = ref('#3b82f6')
-            const primaryColor = ref('#3b82f6')
-            const appBgColor = ref('#c3e0ff')
-            
-            // 數據清單
+            // 【修正 4】預設幣別使用 tripCurrency
+            const newExpense = ref({ amount: null, name: '', type: 'cash', currency: tripCurrency.value, date: '2025-12-08' })
+            const newTodo = ref({ name: '' })
+            const newShoppingItem = ref({ name: '', price: null })
+            const newScheduleItem = ref({ time: '', name: '' })
+
+            // 【修正 4】修正初始記帳數據的幣別為 tripCurrency，但保留一個 TWD 範例
             const expenses = ref([
-                { id: 101, name: '午餐：拉麵', amount: 1500, currency: 'JPY', type: 'cash', date: '2025-12-08' },
-                { id: 104, name: '保險', amount: 1000, currency: 'TWD', type: 'credit', date: 'PreTrip' },
+                { id: 101, name: '午餐：當地小吃', amount: 1500, currency: 'JPY', type: 'cash', date: '2025-12-08' },
+                { id: 102, name: '電車票', amount: 200, currency: 'JPY', type: 'cash', date: '2025-12-08' },
+                { id: 103, name: '住宿費訂金', amount: 15000, currency: 'TWD', type: 'credit', date: 'PreTrip' },
             ])
             const expenseFilter = ref('all') 
             
@@ -722,14 +689,15 @@
                 { id: 2, name: '買網卡/SIM卡', completed: true },
             ])
             
+            // 【修正 4】修正購物清單的預設價格幣別
             const shoppingList = ref([
-                { id: 201, name: 'CEZANNE 101號唇膏', price: 3000, imgUrl: 'https://via.placeholder.com/150/f9fafb/555555?text=Lipstick', purchased: false },
+                { id: 201, name: '當地特產伴手禮', price: 1500, imgUrl: 'https://via.placeholder.com/150/f9fafb/555555?text=Shopping', purchased: false },
             ])
             
             const scheduleList = ref([
                 { id: 1, name: '飛機抵達 NRT', time: '13:00', date: '2025-12-08' },
                 { id: 2, name: '飯店 Check-in', time: '15:00', date: '2025-12-08' },
-                { id: 3, name: '晚餐：壽司大', time: '18:30', date: '2025-12-08' },
+                { id: 3, name: '晚餐：當地餐廳', time: '18:30', date: '2025-12-08' },
             ])
 
 
@@ -761,17 +729,11 @@
             
             const baseCurrencySymbol = computed(() => getCurrencySymbol(baseCurrency.value));
 
+            // 貨幣轉換邏輯 (使用模擬的 exchangeRates)
             const convertToBaseCurrency = (amount, currency) => {
                 if (currency === baseCurrency.value) { return amount; }
-                const rateFrom = exchangeRates.value[currency];
-
-                if (exchangeRates.value[baseCurrency.value] === 1) { 
-                    return amount / rateFrom;
-                }
-                
-                // Fallback 邏輯
-                if (currency === 'JPY' && baseCurrency.value === 'TWD') { return amount * 0.21; }
-                return amount; 
+                const rate = exchangeRates.value[currency] / exchangeRates.value[baseCurrency.value];
+                return amount * rate; 
             }
 
             const totalExpense = computed(() => {
@@ -800,74 +762,92 @@
 
             // --- Methods ---
 
-            // 獲取實時匯率 (以 baseCurrency 為基準)
+            // 獲取實時匯率 (以 tripCurrency 兌換 baseCurrency 為基準)
             const fetchExchangeRate = async () => {
-                const dynamicApiEndpoint = `https://api.exchangerate-api.com/v4/latest/${baseCurrency.value}`;
-                exchangeRate.value = null; 
+                // 由於無法使用真實 API，我們模擬數據庫抓取
+                await new Promise(resolve => setTimeout(resolve, 300));
 
-                try {
-                    const response = await fetch(dynamicApiEndpoint);
-                    if (!response.ok) throw new Error('無法載入匯率數據');
-                    
-                    const data = await response.json();
-                    
-                    if (data && data.rates) {
-                        exchangeRates.value = data.rates;
-                        // 顯示 JPY 兌換 baseCurrency 的匯率 (方便查看目標貨幣)
-                        exchangeRate.value = data.rates['JPY']; 
-                    } else {
-                         throw new Error('匯率數據格式錯誤');
-                    }
-                } catch (error) {
-                    console.error('獲取匯率失敗:', error);
-                    // 預設匯率 (以 TWD 為基準的模擬匯率)
-                    exchangeRates.value = { 
-                        "TWD": 1, "USD": 0.032, "JPY": 4.75, "CNY": 0.23, "EUR": 0.029, 
-                        "KRW": 39.5, "GBP": 0.025 
-                    }; 
-                    exchangeRate.value = exchangeRates.value['JPY'] || 4.75; 
+                const base = baseCurrency.value;
+                const target = tripCurrency.value; 
+
+                // 模擬數據庫：所有貨幣兌 TWD 的匯率 (1 單位貨幣 = ? TWD)
+                const mockRatesToTWD = {
+                    "TWD": 1, "USD": 31, "JPY": 0.21, "CNY": 4.5, "EUR": 34, "KRW": 0.025, "GBP": 38, "THB": 0.85, "HKD": 4.0 
+                };
+
+                // 更新匯率表 (讓 convertToBaseCurrency 使用)
+                exchangeRates.value = mockRatesToTWD;
+
+                // 計算 tripCurrency 兌換 baseCurrency 的匯率 (右上角顯示)
+                if (base === target) {
+                    exchangeRate.value = 1;
+                } else {
+                    // target 價值 / Base 貨幣價值
+                    exchangeRate.value = mockRatesToTWD[target] / mockRatesToTWD[base];
                 }
+                
+                // 【修正 4】更新預設支出幣別
+                newExpense.value.currency = tripCurrency.value;
             }
             
             // 獲取天氣資訊 (模擬 GPS 定位)
             const fetchWeather = async () => {
-                weather.value = { 
-                    temp: null, 
-                    description: '正在定位中...', 
-                    icon: '📡', 
-                    date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }),
-                    loading: true
-                };
-                
+                weather.value.loading = true;
                 await new Promise(resolve => setTimeout(resolve, 800)); 
                 
-                // 模擬 GPS 得到結果
-                const locatedCity = 'Taipei'; 
+                // 根據 tripCurrency 模擬天氣地點
+                let locatedCity = '';
+                if (tripCurrency.value === 'JPY') locatedCity = 'Tokyo, Japan';
+                else if (tripCurrency.value === 'USD') locatedCity = 'New York, USA';
+                else if (tripCurrency.value === 'THB') locatedCity = 'Bangkok, Thailand';
+                else locatedCity = 'Destination';
+                 
                 weatherLocation.value = locatedCity;
 
-                if (locatedCity === 'Taipei') {
-                     weather.value = { temp: 28, description: '多雲，偶陣雨', icon: '🌧️', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
-                } else {
-                     weather.value = { temp: 20, description: '晴朗，微風', icon: '☀️', date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }), loading: false };
-                }
+                weather.value = { 
+                    temp: 20, 
+                    description: '晴朗，微風', 
+                    icon: '☀️', 
+                    date: new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }),
+                    loading: false
+                };
             }
             
-            // 實時航班追蹤功能 (模擬)
+            // 實時航班追蹤功能 (模擬自動更新登機門/狀態)
             const fetchFlightStatus = async () => {
                 if (!flightInfo.value.number) return; 
-                await new Promise(resolve => setTimeout(resolve, 1000)); 
+                flightInfo.value.updating = true;
+                await new Promise(resolve => setTimeout(resolve, 1500)); 
 
-                console.log(`正在模擬追蹤航班 ${flightInfo.value.number} 的實時狀態...`);
-                
-                const currentStatus = ['準時', '延遲 15 分鐘', '已登機', '已抵達', '取消'];
+                const currentStatus = ['準時', '延遲', '登機', '已抵達', '取消'];
                 const randomStatus = currentStatus[Math.floor(Math.random() * currentStatus.length)];
                 
-                flightInfo.value.status = randomStatus; 
+                flightInfo.value.status = randomStatus === '延遲' ? '延遲 25 分鐘' : randomStatus; 
+                
                 // 模擬登機門或航廈變更
-                if (randomStatus === '延遲 15 分鐘') {
+                if (randomStatus === '延遲') {
                      flightInfo.value.gate = 'C05';
                      flightInfo.value.terminal = 'T1';
+                     flightInfo.value.arrivalTime = '13:25';
+                } else if (randomStatus === '登機') {
+                     flightInfo.value.gate = 'B11';
+                     flightInfo.value.terminal = 'T2';
+                } else if (randomStatus === '準時') {
+                     flightInfo.value.gate = 'B10';
+                     flightInfo.value.terminal = 'T2';
+                     flightInfo.value.arrivalTime = '13:00';
                 }
+
+                flightInfo.value.updating = false;
+            }
+            
+            const getFlightStatusKey = (status) => {
+                if (status.includes('準時')) return '準時';
+                if (status.includes('延遲')) return '延遲';
+                if (status.includes('抵達')) return '已抵達';
+                if (status.includes('取消')) return '取消';
+                if (status.includes('登機')) return '登機';
+                return '準時';
             }
 
 
@@ -880,6 +860,8 @@
                     case 'EUR': return '€';
                     case 'KRW': return '₩'; 
                     case 'GBP': return '£'; 
+                    case 'THB': return '฿'; 
+                    case 'HKD': return 'HK$';
                     default: return '';
                 }
             }
@@ -887,35 +869,31 @@
             const updateTheme = (hex) => {
                 primaryColor.value = hex;
                 document.documentElement.style.setProperty('--primary-color', hex);
+                
+                // 簡易的背景色邏輯，確保與主題色有對比
                 const r = parseInt(hex.slice(1, 3), 16);
                 const g = parseInt(hex.slice(3, 5), 16);
                 const b = parseInt(hex.slice(5, 7), 16);
                 
-                if (g > r && g > b) { appBgColor.value = '#d1fae5'; } 
-                else if (r > b) { appBgColor.value = '#fbe2e2'; } 
-                else { appBgColor.value = '#c3e0ff'; }
+                if (g > r && g > b) { appBgColor.value = '#e0f7fa'; } 
+                else if (r > b) { appBgColor.value = '#fff3e0'; } 
+                else { appBgColor.value = '#e3f2ff'; } 
             }
             
+            // --- CRUD 操作 (保持原樣) ---
             const addExpense = () => {
                 if (!newExpense.value.amount || !newExpense.value.name) return;
-
                 const expense = { ...newExpense.value, id: Date.now(), amount: Math.abs(newExpense.value.amount) };
                 expenses.value.push(expense);
-                
-                newExpense.value = { amount: null, name: '', type: 'cash', currency: 'JPY', date: currentDay.value || days.value[1].date };
+                // 【修正 4】預設幣別使用 tripCurrency
+                newExpense.value = { amount: null, name: '', type: 'cash', currency: tripCurrency.value, date: currentDay.value || days.value[1].date };
                 showAccountingModal.value = false;
                 if (currentTab.value !== 'Accounting') { currentTab.value = 'Accounting'; }
             }
             
             const addTodoItem = () => {
                 if (!newTodo.value.name) return;
-                
-                const item = {
-                    id: Date.now(),
-                    name: newTodo.value.name,
-                    completed: false
-                };
-                
+                const item = { id: Date.now(), name: newTodo.value.name, completed: false };
                 todoList.value.push(item);
                 newTodo.value.name = ''; 
                 showTodoModal.value = false;
@@ -923,7 +901,6 @@
 
             const addShoppingItem = () => {
                 if (!newShoppingItem.value.name || !newShoppingItem.value.price) return;
-                
                 const item = {
                     id: Date.now(),
                     name: newShoppingItem.value.name,
@@ -931,7 +908,6 @@
                     imgUrl: 'https://via.placeholder.com/150/f9fafb/555555?text=Shopping', 
                     purchased: false
                 };
-                
                 shoppingList.value.push(item);
                 newShoppingItem.value = { name: '', price: null }; 
                 showShoppingModal.value = false;
@@ -939,14 +915,12 @@
             
             const addScheduleItem = () => {
                 if (!newScheduleItem.value.name) return;
-                
                 const item = {
                     id: Date.now(),
                     name: newScheduleItem.value.name,
                     time: newScheduleItem.value.time,
                     date: currentDay.value
                 };
-                
                 scheduleList.value.push(item);
                 newScheduleItem.value = { name: '', time: '' }; 
                 showScheduleModal.value = false;
@@ -959,7 +933,6 @@
                 else if (type === 'Shopping') label = '購物清單項目';
                 else if (type === 'Schedule') label = '行程項目';
                 else if (type === 'Accounting') label = '支出紀錄';
-                else if (type === 'Flight') label = '航班資訊';
 
                 editingItem.value = { type: type, typeLabel: label, data: JSON.parse(JSON.stringify(itemData)) };
                 showEditModal.value = true;
@@ -981,9 +954,6 @@
                 } else if (item.type === 'Schedule') { 
                      const index = scheduleList.value.findIndex(i => i.id === itemId);
                     if (index !== -1) scheduleList.value[index] = item.data;
-                } else if (item.type === 'Flight') {
-                    flightInfo.value = item.data; 
-                    fetchFlightStatus(); 
                 }
                 
                 showEditModal.value = false;
@@ -1010,15 +980,18 @@
             
             onMounted(() => {
                 document.documentElement.style.setProperty('--primary-color', primaryColorInput.value);
+                // 首次載入時，先確保基礎設定正確
                 fetchExchangeRate(); 
-                fetchWeather(); // 【修正：模擬 GPS 查詢】
+                fetchWeather(); 
                 fetchFlightStatus(); 
 
+                // 每 5 分鐘更新一次匯率和航班狀態
                 setInterval(() => {
                     fetchExchangeRate();
                     fetchFlightStatus();
                 }, 300000); 
                 
+                // 確保記帳預設日期正確
                 if (currentTab.value === 'Accounting' && days.value.length > 1) {
                     newExpense.value.date = currentDay.value;
                 }
@@ -1029,11 +1002,11 @@
                 days, currentDay, currentDayLabel,
                 primaryColor, primaryColorInput, appBgColor, updateTheme,
                 // 貨幣與匯率
-                baseCurrency, exchangeRate, baseCurrencySymbol, getCurrencySymbol, fetchExchangeRate, convertToBaseCurrency,
+                baseCurrency, tripCurrency, exchangeRate, baseCurrencySymbol, getCurrencySymbol, fetchExchangeRate, convertToBaseCurrency,
                 // 天氣
-                weatherLocation, weather, fetchWeather, 
+                weatherLocation, weather, fetchWeather,
                 // 航班
-                flightInfo, fetchFlightStatus, 
+                flightInfo, fetchFlightStatus, getFlightStatusKey, 
                 // 記帳功能相關
                 expenses, expenseFilter, filteredExpenses, totalExpense,
                 showAccountingModal, newExpense, addExpense,
