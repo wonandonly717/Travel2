@@ -15,15 +15,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
 
     <style>
-        /* 由於我們在 Vue 中直接綁定 style，這裡只保留基礎 CSS */
+        /* v2.0 修正：確保 body 透明，並統一 liquid-glass 效果 */
         body {
             font-family: 'Zen Maru Gothic', sans-serif;
-            background-color: transparent !important; /* 確保 body 本身沒有顏色 */
+            background-color: transparent !important; 
             -webkit-tap-highlight-color: transparent;
             overflow-x: hidden;
             color: #1e293b;
             overscroll-behavior-y: none;
-            /* 定義一個 CSS 變數作為備用顏色，但主要依賴 app-bg */
             --default-bg-color: #f0f4f8; 
         }
         
@@ -39,11 +38,11 @@
             background-repeat: no-repeat;
         }
 
-        /* 2. 中間層：毛玻璃遮罩 */
+        /* 2. 中間層：毛玻璃遮罩 (保留輕微模糊) */
         .app-blur-layer {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(255, 255, 255, 0.25); /* 基本底色 */
+            background-color: rgba(255, 255, 255, 0.25); 
             backdrop-filter: blur(4px); 
             z-index: -1;
             pointer-events: none;
@@ -73,10 +72,9 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 
-        /* Liquid Glass 效果 - 提高透明度穿透性 */
+        /* 💡 Liquid Glass 效果 - 使用更高的透明度讓背景穿透 */
         .liquid-glass {
-            /* 💡 修正 1: 讓背景有更高的透明度 */
-            background: rgba(255, 255, 255, 0.5) !important; 
+            background: rgba(255, 255, 255, 0.3) !important; /* 更高的透明度 */
             backdrop-filter: blur(24px) saturate(180%);
             -webkit-backdrop-filter: blur(24px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.8);
@@ -85,7 +83,7 @@
             box-shadow: 
                 0 8px 32px 0 rgba(31, 38, 135, 0.1),
                 inset 0 0 0 1px rgba(255, 255, 255, 0.3),
-                inset 0 10px 20px rgba(255, 255, 255, 0.3);
+                inset 0 10px 20px rgba(255, 255, 255, 0.1); /* 減少內陰影，更通透 */
             position: relative;
             overflow: hidden;
         }
@@ -97,7 +95,7 @@
             background: linear-gradient(
                 to right,
                 rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0.8) 50%,
+                rgba(255, 255, 255, 0.6) 50%, /* 減少反光強度 */
                 rgba(255, 255, 255, 0) 100%
             );
             transform: skewX(-25deg);
@@ -105,14 +103,6 @@
             opacity: 0.3; 
             transition: left 0.5s;
         }
-
-        .card-bg {
-            /* 讓行程卡片也有一點透明度 */
-            background: rgba(255, 255, 255, 0.75) !important;
-            backdrop-filter: blur(16px) saturate(120%) !important;
-            border: 1px solid rgba(255, 255, 255, 0.5) !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
-            }
 
         /* 導航欄固定樣式優化 */
         .bottom-nav {
@@ -125,7 +115,6 @@
             margin: 0 auto;
         }
         
-        /* 顏色選擇器隱藏樣式 */
         .color-picker-wrapper {
             display: inline-block;
             width: 40px;
@@ -152,7 +141,8 @@
     
     <div id="scroll-container">
         
-        <div v-if="['schedule', 'map', 'todo'].includes(currentTab)" class="sticky top-0 z-40 header-bg pt-4 pb-2 shadow-sm rounded-b-3xl">
+        <div v-if="['schedule', 'map', 'todo'].includes(currentTab)" 
+             class="sticky top-0 z-40 liquid-glass pt-4 pb-2 rounded-b-3xl border-t-0 shadow-xl shadow-slate-200/50">
             <div class="px-6 mb-3 flex justify-between items-center">
                 <div>
                     <h1 class="text-xl font-black text-slate-800 tracking-widest flex items-center gap-2 truncate">
@@ -160,7 +150,7 @@
                     </h1>
                 </div>
                 <div class="text-right">
-                    <div class="text-[10px] text-slate-500 font-bold">目前匯率 ({{ baseCurrency }}/{{ targetCurrency }})</div>
+                    <div class="text-[10px] text-slate-600 font-bold">目前匯率 ({{ baseCurrency }}/{{ targetCurrency }})</div>
                     <div class="font-bold text-custom-blue text-sm">
                         1 {{ getCurrencySymbol(baseCurrency) }} ≈ {{ exchangeRate ? exchangeRate.toFixed(4) : '未設定' }} {{ getCurrencySymbol(targetCurrency) }}
                     </div>
@@ -171,7 +161,7 @@
                 <div @click="selectDate('todo')"
                     id="date-btn-todo"
                     class="snap-center flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 cursor-pointer border-2"
-                    :class="selectedDate === 'todo' ? 'bg-orange-50 border-orange-200 text-orange-500 shadow-md scale-105' : 'bg-white/80 border-slate-200 text-slate-400'"
+                    :class="selectedDate === 'todo' ? 'bg-orange-100 border-orange-200 text-orange-500 shadow-md scale-105' : 'bg-white/50 border-slate-200 text-slate-400 backdrop-blur-md'"
                 >
                     <i class="fas fa-clipboard-list text-xl mb-1"></i>
                     <span class="text-[11px] font-bold">行前</span>
@@ -180,7 +170,7 @@
                 <div v-for="(day, index) in tripDates" :key="index" @click="selectDate(day.date)"
                     :id="'date-btn-' + day.date"
                     class="snap-center flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 cursor-pointer border-2"
-                    :class="selectedDate === day.date ? 'bg-custom-blue border-blue-300 text-white shadow-lg shadow-blue-200 scale-105' : 'bg-white/80 border-slate-200 text-slate-400'"
+                    :class="selectedDate === day.date ? 'bg-custom-blue border-blue-300 text-white shadow-lg shadow-blue-200 scale-105' : 'bg-white/50 border-slate-200 text-slate-400 backdrop-blur-md'"
                 >
                     <span class="text-[11px] font-bold">{{ day.day }}</span>
                     <span class="text-xl font-black">{{ day.date.split('-')[2] }}</span>
@@ -193,7 +183,7 @@
             
             <div v-if="currentTab === 'schedule' && selectedDate === 'todo'" class="space-y-4 animate-fade-in">
                 <div class="flex justify-between items-end mb-2 px-2">
-                    <h2 class="text-lg font-bold text-slate-800 drop-shadow-sm bg-white/40 px-2 rounded-lg backdrop-blur-sm inline-block">行前清單</h2>
+                    <h2 class="text-lg font-bold text-slate-800 drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50">行前清單</h2>
                     <button @click="openModal('todo')" class="text-sm bg-orange-100 text-orange-700 px-3 py-1.5 rounded-full hover:bg-orange-200 transition font-bold shadow-sm">
                         <i class="fas fa-plus mr-1"></i>新增
                     </button>
@@ -207,7 +197,7 @@
                                 :class="item.done ? 'bg-orange-400 border-orange-400 text-white' : 'border-slate-400 text-transparent'">
                                 <i class="fas fa-check text-xs"></i>
                             </button>
-                            <span :class="{'line-through text-slate-400': item.done, 'text-slate-800 font-bold': !item.done}">{{ item.text }}</span>
+                            <span :class="{'line-through text-slate-500': item.done, 'text-slate-800 font-bold': !item.done}">{{ item.text }}</span>
                         </div>
                         <button @click="deleteItem('todo', item.id)" class="text-slate-400 hover:text-red-500"><i class="fas fa-trash"></i></button>
                     </div>
@@ -222,19 +212,19 @@
                             <i :class="weatherInfo.icon"></i>
                         </div>
                         <div>
-                            <div class="text-2xl font-black leading-none">{{ weatherInfo.temp }}°C</div>
+                            <div class="text-2xl font-black leading-none text-slate-800">{{ weatherInfo.temp }}°C</div>
                             <div class="text-[10px] font-bold opacity-70 mt-1">體感 {{ weatherInfo.feel }}°C · {{ weatherInfo.desc }}</div>
                         </div>
                     </div>
                     <div class="text-right">
                         <div class="text-xs font-bold bg-sky-100 text-sky-600 px-2 py-1 rounded-full mb-1">
-                            <i class="fas fa-map-marker-alt mr-1"></i>當地城市
+                            <i class="fas fa-map-marker-alt mr-1"></i>當地城市 (模擬)
                         </div>
                     </div>
                 </div>
 
                 <div class="flex justify-between items-end px-1 pt-2">
-                    <h2 class="text-lg font-bold text-slate-800 drop-shadow-sm bg-white/40 px-2 rounded-lg backdrop-blur-sm inline-block">行程安排</h2>
+                     <h2 class="text-lg font-bold text-slate-800 drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50">行程安排</h2>
                     <button @click="openModal('schedule', null)" class="text-sm bg-[#5076a8] text-white px-4 py-1.5 rounded-full shadow-lg shadow-blue-200/50 transition transform active:scale-95 font-bold">
                         <i class="fas fa-plus mr-1"></i>新增
                     </button>
@@ -243,7 +233,7 @@
                 <div ref="sortableList" class="space-y-4">
                     <div v-for="item in dailyItinerary" :key="item.id" :data-id="item.id" class="cursor-grab active:scale-[0.99] transition-transform">
                         
-                        <div v-if="item.category === 'flight'" class="flight-card rounded-3xl p-5 shadow-lg shadow-blue-900/20 group relative">
+                        <div v-if="item.category === 'flight'" class="bg-gradient-to-r from-blue-700 to-blue-900 rounded-3xl p-5 shadow-lg shadow-blue-900/20 group relative text-white">
                             <div class="flex justify-between items-start mb-4 relative z-10">
                                 <div class="flex items-center gap-2">
                                     <span class="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold backdrop-blur-sm">FLIGHT</span>
@@ -261,7 +251,7 @@
                                 </div>
                                 <div class="flex-1 px-4 text-center">
                                     <i class="fas fa-plane text-2xl text-white/80 rotate-0"></i>
-                                    <div class="flight-line w-full my-1"></div>
+                                    <div class="flight-line w-full my-1 border-t border-white/50"></div>
                                     <div class="text-[10px] text-blue-200 font-mono">{{ item.location.split(' ')[1] || 'CX520' }}</div>
                                 </div>
                                 <div class="text-right">
@@ -271,7 +261,7 @@
                             </div>
                             
                             <div class="mt-4 pt-3 border-t border-white/10 relative z-10">
-                                <span class="text-sm font-bold text-white block truncate">{{ item.location }}</span>
+                                <span class="text-sm font-bold block truncate">{{ item.location }}</span>
                                 <div class="flex justify-between items-center text-xs mt-1">
                                     <div class="flex gap-3 text-blue-200 font-bold">
                                         <span>Gate: {{ item.gate || '-' }}</span>
@@ -289,7 +279,7 @@
                                      :class="getCategoryColor(item.category)" style="background-opacity: 0.8;">
                                     <i :class="getCategoryIcon(item.category)"></i>
                                 </div>
-                                <span class="text-sm font-bold text-slate-600 font-mono tracking-tighter mix-blend-multiply">{{ item.time }}</span>
+                                <span class="text-sm font-bold text-slate-700 font-mono tracking-tighter">{{ item.time }}</span>
                             </div>
                             
                             <div class="flex-1 min-w-0">
@@ -302,10 +292,10 @@
                                 
                                 <div class="flex items-center mt-1 mb-2">
                                     <a :href="'https://www.google.com/maps/search/?api=1&query=`。' + encodeURIComponent(item.location + ' ' + item.address)" target="_blank"
-                                       class="text-[10px] bg-blue-50/80 text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-100 transition flex items-center gap-1 font-bold backdrop-blur-sm">
+                                       class="text-[10px] bg-white/60 text-blue-600 px-2 py-1 rounded-lg hover:bg-white transition flex items-center gap-1 font-bold backdrop-blur-sm border border-white/50">
                                         <i class="fas fa-location-arrow"></i> 導航
                                     </a>
-                                    <span class="text-slate-500 text-xs ml-2 truncate font-medium">{{ item.address }}</span>
+                                    <span class="text-slate-600 text-xs ml-2 truncate font-medium">{{ item.address }}</span>
                                 </div>
 
                                 <div v-if="item.note" class="bg-white/40 p-2.5 rounded-xl text-xs text-slate-700 leading-relaxed border border-white/30 backdrop-blur-sm">
@@ -318,7 +308,7 @@
                     </div>
                 </div>
                 
-                <div v-if="dailyItinerary.length === 0" class="text-center py-12 text-slate-600 bg-white/30 rounded-3xl backdrop-blur-sm">
+                <div v-if="dailyItinerary.length === 0" class="text-center py-12 text-slate-600 liquid-glass rounded-3xl">
                     <p class="font-bold">尚無行程</p>
                 </div>
             </div>
@@ -334,7 +324,7 @@
             </div>
 
             <div v-if="currentTab === 'money'" class="space-y-6 pt-6 animate-fade-in">
-                <h2 class="text-2xl font-black text-slate-800 drop-shadow-sm bg-white/40 px-2 rounded-lg backdrop-blur-sm inline-block mx-2">旅費管理</h2>
+                <h2 class="text-2xl font-black text-slate-800 drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block mx-2 border border-white/50">旅費管理</h2>
                 
                 <div class="bg-gradient-to-br from-[#6B8CB8] to-[#4A6FA5] p-6 rounded-3xl text-white shadow-xl shadow-blue-900/20 relative overflow-hidden mx-1">
                     <i class="fas fa-coins absolute -right-6 -bottom-6 text-9xl opacity-10 rotate-12"></i>
@@ -382,16 +372,16 @@
                 <div>
                     <div class="flex flex-col gap-3 mb-4 px-1">
                         <div class="flex justify-between items-center">
-                            <h3 class="font-bold text-slate-800 bg-white/40 px-2 rounded-lg backdrop-blur-sm">支出明細</h3>
-                            <button @click="openModal('money')" class="text-[#5076a8] text-sm font-bold bg-white/90 px-3 py-1.5 rounded-full shadow-sm"><i class="fas fa-plus mr-1"></i>記一筆</button>
+                             <h3 class="font-bold text-slate-800 bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50">支出明細</h3>
+                            <button @click="openModal('money')" class="text-[#5076a8] text-sm font-bold bg-white/90 px-3 py-1.5 rounded-full shadow-sm liquid-glass"><i class="fas fa-plus mr-1"></i>記一筆</button>
                         </div>
                         
-                            <div class="flex bg-white/50 backdrop-blur-md p-1 rounded-xl overflow-x-auto no-scrollbar gap-1">
-                            <button @click="expenseFilter = 'all'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'all' ? 'bg-white shadow text-[#5076a8]' : 'text-slate-500'">全部</button>
-                            <button @click="expenseFilter = 'cash'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'cash' ? 'bg-white shadow text-green-600' : 'text-slate-500'">現金</button>
-                            <button @click="expenseFilter = 'card'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'card' ? 'bg-white shadow text-purple-600' : 'text-slate-500'">信用卡</button>
-                            <button @click="expenseFilter = 'epay1'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'epay1' ? 'bg-white shadow text-blue-600' : 'text-slate-500'">電子支付1</button>
-                            <button @click="expenseFilter = 'epay2'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'epay2' ? 'bg-white shadow text-red-600' : 'text-slate-500'">電子支付2</button>
+                            <div class="flex liquid-glass p-1 rounded-xl overflow-x-auto no-scrollbar gap-1">
+                            <button @click="expenseFilter = 'all'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'all' ? 'bg-white shadow text-[#5076a8]' : 'text-slate-600'">全部</button>
+                            <button @click="expenseFilter = 'cash'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'cash' ? 'bg-white shadow text-green-600' : 'text-slate-600'">現金</button>
+                            <button @click="expenseFilter = 'card'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'card' ? 'bg-white shadow text-purple-600' : 'text-slate-600'">信用卡</button>
+                            <button @click="expenseFilter = 'epay1'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'epay1' ? 'bg-white shadow text-blue-600' : 'text-slate-600'">電子支付1</button>
+                            <button @click="expenseFilter = 'epay2'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'epay2' ? 'bg-white shadow text-red-600' : 'text-slate-600'">電子支付2</button>
                         </div>
 
                     </div>
@@ -413,20 +403,20 @@
                                 </div>
                                 <div>
                                     <p class="font-bold text-slate-800">{{ exp.item }}</p>
-                                    <p class="text-[10px] text-slate-500 font-bold bg-slate-100/80 inline-block px-1.5 rounded mt-0.5">
+                                    <p class="text-[10px] text-slate-600 font-bold bg-white/70 inline-block px-1.5 rounded mt-0.5 backdrop-blur-sm">
                                         {{ exp.date }}
                                     </p>
                                 </div>
                             </div>
                             <div class="text-right">
                                 <p class="font-bold text-slate-800">-{{ getCurrencySymbol(baseCurrency) }}{{ exp.amount.toLocaleString() }}</p>
-                                <p class="text-xs text-slate-500 font-medium">
+                                <p class="text-xs text-slate-600 font-medium">
                                     ≈ {{ exchangeRate ? getCurrencySymbol(targetCurrency) + Math.round(exp.amount * exchangeRate).toLocaleString() : '匯率未設' }}
                                 </p>
                             </div>
                             <button @click="deleteItem('expense', exp.id)" class="text-slate-300 hover:text-red-400 ml-2 px-2"><i class="fas fa-times"></i></button>
                         </div>
-                        <div v-if="filteredExpenses.length === 0" class="text-center text-sm text-slate-500 py-4">
+                        <div v-if="filteredExpenses.length === 0" class="text-center text-sm text-slate-600 py-4 liquid-glass rounded-2xl">
                             沒有相關的支出紀錄
                         </div>
                     </div>
@@ -435,7 +425,7 @@
 
             <div v-if="currentTab === 'shop'" class="space-y-6 pt-6 animate-fade-in">
                  <div class="flex justify-between items-center px-2">
-                    <h2 class="text-2xl font-black text-slate-800 drop-shadow-sm bg-white/40 px-2 rounded-lg backdrop-blur-sm inline-block">購物清單</h2>
+                    <h2 class="text-2xl font-black text-slate-800 drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50">購物清單</h2>
                      <button @click="openModal('shop')" class="bg-slate-800 text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition">
                         <i class="fas fa-plus"></i>
                     </button>
@@ -444,25 +434,25 @@
                 <div class="grid grid-cols-2 gap-4 pb-4">
                     <div v-for="item in shoppingList" :key="item.id" 
                          class="liquid-glass p-3 rounded-2xl shadow-sm border border-slate-100/50 flex flex-col justify-between relative overflow-hidden transition-all group"
-                         :class="{'opacity-60 bg-slate-50 grayscale': item.bought}">
+                         :class="{'opacity-60 bg-slate-50/70 grayscale': item.bought}">
                         
                         <div v-if="item.image" class="w-full h-28 mb-2 overflow-hidden rounded-xl bg-slate-100 border border-slate-100">
                             <img :src="item.image" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
                         </div>
-                        <div v-else class="w-full h-28 mb-2 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 border border-slate-200 border-dashed">
+                        <div v-else class="w-full h-28 mb-2 rounded-xl bg-white/60 flex items-center justify-center text-slate-300 border border-slate-200 border-dashed">
                             <i class="fas fa-image text-3xl"></i>
                         </div>
 
                         <div>
-                            <h3 class="font-bold text-slate-800 text-sm mb-1 line-clamp-2" :class="{'line-through': item.bought}">{{ item.name }}</h3>
-                             <p class="text-xs text-slate-500 font-bold">{{ getCurrencySymbol(baseCurrency) }}{{ (item.price || 0).toLocaleString() }}</p>
+                            <h3 class="font-bold text-slate-800 text-sm mb-1 line-clamp-2" :class="{'line-through text-slate-500': item.bought}">{{ item.name }}</h3>
+                             <p class="text-xs text-slate-700 font-bold">{{ getCurrencySymbol(baseCurrency) }}{{ (item.price || 0).toLocaleString() }}</p>
                         </div>
                         
                         <div class="flex justify-between items-end mt-3">
                              <button @click="deleteItem('shop', item.id)" class="text-slate-300 hover:text-red-400 text-xs p-1"><i class="fas fa-trash"></i></button>
                              <button @click="toggleBought(item)" 
                                      class="w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm"
-                                     :class="item.bought ? 'bg-green-100 text-green-500' : 'bg-white text-slate-300 border border-slate-200'">
+                                     :class="item.bought ? 'bg-green-100 text-green-500' : 'bg-white/70 text-slate-300 border border-slate-200 backdrop-blur-md'">
                                  <i class="fas fa-check"></i>
                              </button>
                         </div>
@@ -472,7 +462,7 @@
 
             <div v-if="currentTab === 'info'" class="space-y-6 pt-6 animate-fade-in">
                 <div class="flex justify-between items-center px-2">
-                    <h2 class="text-2xl font-black text-slate-800 drop-shadow-sm bg-white/40 px-2 rounded-lg backdrop-blur-sm inline-block">資訊整理</h2>
+                    <h2 class="text-2xl font-black text-slate-800 drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50">資訊整理</h2>
                     <button @click="openModal('info')" class="text-sm bg-purple-100 text-purple-600 px-3 py-1.5 rounded-full hover:bg-purple-200 transition font-bold shadow-sm">
                         <i class="fas fa-plus mr-1"></i>新增
                     </button>
@@ -487,20 +477,20 @@
                                 <button @click="deleteItem('info', info.id)" class="text-slate-400 hover:text-red-400"><i class="fas fa-times"></i></button>
                             </div>
                         </div>
-                        <div class="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed font-medium">{{ info.content }}</div>
+                        <div class="text-slate-700 text-sm whitespace-pre-wrap leading-relaxed font-medium">{{ info.content }}</div>
                     </div>
                 </div>
             </div>
 
             <div v-if="currentTab === 'settings'" class="space-y-6 pt-6 animate-fade-in">
                 <div class="px-2">
-                    <h2 class="text-2xl font-black text-slate-800 drop-shadow-sm bg-white/40 px-2 rounded-lg backdrop-blur-sm inline-block">行程設定</h2>
+                    <h2 class="text-2xl font-black text-slate-800 drop-shadow-sm bg-white/50 px-2 py-1 rounded-lg backdrop-blur-sm inline-block border border-white/50">行程設定</h2>
                 </div>
                 
                 <div class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50 space-y-4">
                     <h3 class="font-bold text-slate-800 border-l-4 border-slate-500 pl-3">旅程標題</h3>
                     <input v-model="tripTitle" type="text" @change="saveToLocalStorage" placeholder="例如: 2025 泰國清邁遊" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 text-lg">
-                    <p class="text-xs text-slate-500 font-bold bg-white/50 p-3 rounded-xl">
+                    <p class="text-xs text-slate-600 font-bold bg-white/50 p-3 rounded-xl">
                         <i class="fas fa-tag mr-1 text-blue-400"></i>
                         這個標題會顯示在應用程式上方。
                     </p>
@@ -554,7 +544,7 @@
 
                     </div>
 
-                    <p class="text-xs text-slate-500 font-bold bg-white/50 p-3 rounded-xl">
+                    <p class="text-xs text-slate-600 font-bold bg-white/50 p-3 rounded-xl">
                         <i class="fas fa-palette mr-1 text-purple-400"></i>
                         請選擇背景主題：預設圖片、自訂顏色或自訂圖片。選擇「自訂圖片」會將圖片**疊在**自訂顏色上方。
                     </p>
@@ -565,12 +555,12 @@
                     <h3 class="font-bold text-slate-800 border-l-4 border-slate-500 pl-3">旅程時間</h3>
                     
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">出發日期</label>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">出發日期</label>
                         <input v-model="startDate" type="date" @change="saveToLocalStorage" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">旅遊天數 ({{ tripDuration }} 天)</label>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">旅遊天數 ({{ tripDuration }} 天)</label>
                         <input v-model.number="tripDuration" type="range" min="1" max="10" step="1" @change="saveToLocalStorage" class="w-full accent-[#5076a8]">
                         <div class="flex justify-between text-[10px] text-slate-400 font-bold px-1 mt-1">
                             <span>1天</span>
@@ -579,7 +569,7 @@
                         </div>
                     </div>
                     
-                    <div class="bg-blue-50/50 p-3 rounded-xl text-xs text-slate-600">
+                    <div class="bg-blue-50/50 p-3 rounded-xl text-xs text-slate-700">
                         <i class="fas fa-info-circle mr-1 text-blue-400"></i>
                         目前設定：{{ startDate }} 起，共 {{ tripDuration }} 天
                     </div>
@@ -589,7 +579,7 @@
                     <h3 class="font-bold text-slate-800 border-l-4 border-slate-500 pl-3">匯率設定</h3>
                     
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">當地幣別 (旅遊地貨幣)</label>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">當地幣別 (旅遊地貨幣)</label>
                          <select v-model="baseCurrency" @change="saveToLocalStorage(); exchangeRate = null;" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100">
                             <option value="TWD">TWD (新台幣)</option>
                             <option value="HKD">HKD (港幣)</option>
@@ -603,7 +593,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">目標換算幣別 (個人記帳幣別)</label>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">目標換算幣別 (個人記帳幣別)</label>
                          <select v-model="targetCurrency" @change="saveToLocalStorage(); exchangeRate = null;" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100">
                             <option value="TWD">TWD (台幣)</option>
                             <option value="HKD">HKD (港幣)</option>
@@ -621,7 +611,7 @@
                         <input v-model.number="exchangeRate" type="number" step="0.0001" @change="saveToLocalStorage" placeholder="請手動輸入匯率" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200 text-lg text-right">
                         <div class="text-3xl font-black text-slate-800">{{ getCurrencySymbol(targetCurrency) }}</div>
                     </div>
-                    <p class="text-xs text-slate-500 font-bold bg-white/50 p-2 rounded-lg">
+                    <p class="text-xs text-slate-600 font-bold bg-white/50 p-2 rounded-lg">
                         <i class="fas fa-exclamation-triangle mr-1 text-yellow-500"></i>
                         當前匯率為: 1 {{ baseCurrency }} ≈ {{ exchangeRate ? exchangeRate.toFixed(4) : '尚未設定' }} {{ targetCurrency }}。
                     </p>
@@ -633,7 +623,7 @@
 
                 <div class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50 space-y-4">
                     <h3 class="font-bold text-slate-800 border-l-4 border-green-500 pl-3">資料備份</h3>
-                    <p class="text-xs text-slate-500 font-bold">建議定期匯出備份，以免更換手機或清除快取時資料遺失。</p>
+                    <p class="text-xs text-slate-600 font-bold">建議定期匯出備份，以免更換手機或清除快取時資料遺失。</p>
                     
                     <div class="grid grid-cols-2 gap-3">
                         <button @click="exportData" class="flex items-center justify-center gap-2 bg-[#5076a8] text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition">
@@ -648,7 +638,7 @@
                 </div>
                 
                 <div class="text-center text-[10px] text-slate-400 font-bold mt-8">
-                    Travel Planner v1.8 (強制 Vue 樣式綁定) <br>
+                    Travel Planner v2.0 (天氣穩定版) <br>
                 </div>
             </div>
 
@@ -658,27 +648,27 @@
 
     <div class="bottom-nav liquid-glass rounded-full backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-slate-200/50 rounded-full">
          <div class="flex justify-between items-center px-1">
-            <button @click="switchTab('schedule')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'schedule' ? 'text-[#5076a8]' : 'text-slate-400'">
+            <button @click="switchTab('schedule')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'schedule' ? 'text-[#5076a8]' : 'text-slate-500'">
                 <i class="fas fa-route text-xl mb-0.5"></i>
                 <span class="text-[10px] font-bold">行程</span>
             </button>
-            <button @click="switchTab('map')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'map' ? 'text-[#5076a8]' : 'text-slate-400'">
+            <button @click="switchTab('map')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'map' ? 'text-[#5076a8]' : 'text-slate-500'">
                 <i class="fas fa-map-marked-alt text-xl mb-0.5"></i>
                 <span class="text-[10px] font-bold">地圖</span>
             </button>
-            <button @click="switchTab('money')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'money' ? 'text-[#5076a8]' : 'text-slate-400'">
+            <button @click="switchTab('money')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'money' ? 'text-[#5076a8]' : 'text-slate-500'">
                 <i class="fas fa-wallet text-xl mb-0.5"></i>
                 <span class="text-[10px] font-bold">記帳</span>
             </button>
-            <button @click="switchTab('shop')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'shop' ? 'text-[#5076a8]' : 'text-slate-400'">
+            <button @click="switchTab('shop')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'shop' ? 'text-[#5076a8]' : 'text-slate-500'">
                 <i class="fas fa-shopping-bag text-xl mb-0.5"></i>
                 <span class="text-[10px] font-bold">購物</span>
             </button>
-            <button @click="switchTab('info')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'info' ? 'text-purple-400' : 'text-slate-400'">
+            <button @click="switchTab('info')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'info' ? 'text-purple-600' : 'text-slate-500'">
                 <i class="fas fa-info-circle text-xl mb-0.5"></i>
                 <span class="text-[10px] font-bold">資訊</span>
             </button>
-                         <button @click="switchTab('settings')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'settings' ? 'text-slate-600' : 'text-slate-400'">
+                         <button @click="switchTab('settings')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'settings' ? 'text-slate-800' : 'text-slate-500'">
                 <i class="fas fa-cog text-xl mb-0.5"></i>
                 <span class="text-[10px] font-bold">設定</span>
             </button>
@@ -783,6 +773,41 @@
 
 <script>
     const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
+    
+    // 💡 輔助函式：產生隨機天氣數據 (只在初始化時呼叫)
+    const generateRandomWeather = () => {
+        let temp = Math.floor(Math.random() * 20) + 15; // 15°C ~ 34°C
+        let icon = 'fas fa-sun';
+        let desc = '舒適';
+        let feelDiff = 0;
+
+        const iconChoices = [
+            { icon: 'fas fa-sun', desc: '晴朗' },
+            { icon: 'fas fa-cloud-sun', desc: '多雲' },
+            { icon: 'fas fa-cloud', desc: '陰天' },
+            { icon: 'fas fa-cloud-showers-heavy', desc: '有雨' },
+            { icon: 'fas fa-snowflake', desc: '降雪', minTemp: 0 },
+        ];
+
+        let choice = iconChoices[Math.floor(Math.random() * iconChoices.length)];
+        icon = choice.icon;
+        desc = choice.desc;
+
+        if (temp < 10) { 
+            desc = '寒冷';
+            icon = 'fas fa-temperature-low';
+            feelDiff = -3;
+        } else if (temp > 30) { 
+            desc = '炎熱';
+            icon = 'fas fa-sun';
+            feelDiff = 3;
+        } else if (icon === 'fas fa-cloud-showers-heavy') {
+             desc = '有陣雨';
+        }
+
+        return { temp, icon, desc, feel: temp + feelDiff };
+    };
+
 
     createApp({
         setup() {
@@ -807,15 +832,19 @@
             const targetCurrency = ref('HKD');
             
             // 背景邏輯
-            const appBgColor = ref('default'); // 'default', 'custom_color', 'custom_image'
+            const appBgColor = ref('default'); 
             const customBgColor = ref('#f0f4f8'); 
-            const customBgImage = ref(null); // 儲存 Base64 圖片字串
+            const customBgImage = ref(null); 
+            
+            // 💡 儲存每個日期的固定天氣資訊
+            const dailyWeather = ref({}); 
 
-            // 💡 修正 5: 核心邏輯 - 直接返回 style 物件，強制覆蓋樣式
+
+            // 核心邏輯 - 直接返回 style 物件，強制覆蓋樣式
             const getAppBgStyle = () => {
                 const style = {};
                 
-                // 1. 設定背景顏色 (無論哪種模式，都使用 customBgColor 作為底色)
+                // 1. 設定背景顏色 (始終使用 customBgColor 作為底色)
                 style['background-color'] = customBgColor.value;
 
                 // 2. 根據模式設定圖片
@@ -914,33 +943,10 @@
                 return expenses.value.filter(e => e.paymentMethod === expenseFilter.value);
             });
 
-            // 天氣模擬
+            // 💡 天氣資訊現在從 dailyWeather ref 中讀取 (固定，不再隨機跳動)
             const weatherInfo = computed(() => {
-                if(selectedDate.value === 'todo') return { temp: '-', icon: 'fas fa-question-circle', desc: '?' };
-                let temp = Math.floor(Math.random() * 20) + 15;
-                let icon = 'fas fa-sun';
-                let desc = '舒適';
-                let feelDiff = 0;
-
-                if (temp < 15) { 
-                    icon = 'fas fa-cloud';
-                    desc = '微涼';
-                    feelDiff = -2;
-                } else if (temp > 30) { 
-                    icon = 'fas fa-sun';
-                    desc = '炎熱';
-                    feelDiff = 3;
-                } else if (Math.random() > 0.7) {
-                    icon = 'fas fa-cloud-showers-heavy';
-                    desc = '有雨';
-                }
-
-                return {
-                    temp,
-                    icon,
-                    desc,
-                    feel: temp + feelDiff
-                };
+                if(selectedDate.value === 'todo') return { temp: '-', icon: 'fas fa-question-circle', desc: '行前' };
+                return dailyWeather.value[selectedDate.value] || { temp: '?', icon: 'fas fa-question-circle', desc: '載入中' };
             });
 
             const modalTitle = computed(() => {
@@ -955,8 +961,8 @@
             };
             
             const getCategoryColor = (cat) => {
-                const map = { sightseeing: 'bg-pink-300', food: 'bg-orange-300', transport: 'bg-blue-400', flight: 'bg-sky-500', shopping: 'bg-yellow-400', other: 'bg-slate-400' };
-                return map[cat] || 'bg-slate-400';
+                const map = { sightseeing: 'bg-pink-500', food: 'bg-orange-500', transport: 'bg-blue-600', flight: 'bg-sky-600', shopping: 'bg-yellow-500', other: 'bg-slate-500' };
+                return map[cat] || 'bg-slate-500';
             };
 
             const selectDate = (date) => {
@@ -1022,7 +1028,6 @@
                 }
             };
             
-            // 💡 修正 6: 處理背景圖片上傳的邏輯 (只上傳，不自動選中)
             const handleBgImageUpload = (event) => {
                 const file = event.target.files[0];
                 if (file) {
@@ -1104,8 +1109,8 @@
             const toggleBought = (item) => { item.bought = !item.bought; saveToLocalStorage(); };
 
             const saveToLocalStorage = () => {
-                // 使用 v18 版本號
-                localStorage.setItem('trip_planner_v18', JSON.stringify({ 
+                // 使用 v20 版本號
+                localStorage.setItem('trip_planner_v20', JSON.stringify({ 
                     settings: { 
                         startDate: startDate.value, 
                         duration: tripDuration.value,
@@ -1118,13 +1123,15 @@
                         targetCurrency: targetCurrency.value
                     }, 
                     itinerary: itineraryData.value, expenses: expenses.value,
-                    shop: shoppingList.value, todo: todoList.value, info: infoList.value
+                    shop: shoppingList.value, todo: todoList.value, info: infoList.value,
+                    // 💡 儲存每日固定天氣
+                    dailyWeather: dailyWeather.value
                 }));
             };
             
-            // 處理版本兼容性 (這次只載入 v18 版本)
+            // 處理版本兼容性 (這次只載入 v20 版本)
             const loadData = () => {
-                let data = JSON.parse(localStorage.getItem('trip_planner_v18'));
+                let data = JSON.parse(localStorage.getItem('trip_planner_v20'));
                 
                 if (data) {
                     if (data.settings) { 
@@ -1144,9 +1151,18 @@
                     shoppingList.value = data.shop || [];
                     todoList.value = data.todo || [];
                     infoList.value = data.info || [];
+                    // 💡 載入每日天氣
+                    dailyWeather.value = data.dailyWeather || {};
                 } else {
                      customBgColor.value = '#f0f4f8';
                 }
+                
+                // 💡 確保每個行程日期都有一個固定的天氣
+                tripDates.value.forEach(day => {
+                    if (!dailyWeather.value[day.date]) {
+                        dailyWeather.value[day.date] = generateRandomWeather();
+                    }
+                });
                 
                 if (tripDates.value.length > 0) {
                     selectedDate.value = tripDates.value[0].date;
@@ -1154,6 +1170,24 @@
                      selectedDate.value = 'todo';
                 }
             };
+            
+            // 監聽日期或天數變化，重新生成/檢查天氣數據
+            watch([startDate, tripDuration], () => {
+                tripDates.value.forEach(day => {
+                    if (!dailyWeather.value[day.date]) {
+                        dailyWeather.value[day.date] = generateRandomWeather();
+                    }
+                });
+                // 刪除多餘的天氣數據
+                const validDates = tripDates.value.map(d => d.date);
+                for (const date in dailyWeather.value) {
+                    if (!validDates.includes(date)) {
+                        delete dailyWeather.value[date];
+                    }
+                }
+                saveToLocalStorage();
+            });
+
 
             const initMap = (lat = 25.0478, lng = 121.5318) => { 
                 mapObj.value = L.map('map').setView([lat, lng], 11);
@@ -1182,7 +1216,7 @@
 
             const exportData = () => {
                 const data = {
-                    version: '1.8',
+                    version: '2.0',
                     exportDate: new Date().toISOString(),
                     settings: { 
                         startDate: startDate.value, 
@@ -1199,7 +1233,8 @@
                     expenses: expenses.value,
                     shop: shoppingList.value,
                     todo: todoList.value,
-                    info: infoList.value
+                    info: infoList.value,
+                    dailyWeather: dailyWeather.value
                 };
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
@@ -1257,6 +1292,7 @@
                             shoppingList.value = data.shop || [];
                             todoList.value = data.todo || [];
                             infoList.value = data.info || [];
+                            dailyWeather.value = data.dailyWeather || {}; 
                             
                             saveToLocalStorage();
                             alert('資料匯入成功！請重新選擇行程日期。');
@@ -1336,7 +1372,7 @@
                 toggleTodo, toggleBought, handleImageUpload, handleBgImageUpload, sortableList, 
                 startDate, tripDuration,
                 // 設定相關
-                appBgColor, customBgColor, customBgImage, getAppBgStyle, // 💡 修正 7: 變更為 getAppBgStyle
+                appBgColor, customBgColor, customBgImage, getAppBgStyle, 
                 tripTitle, 
                 baseCurrency, 
                 targetCurrency, 
